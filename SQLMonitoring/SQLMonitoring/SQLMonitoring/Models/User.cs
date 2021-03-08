@@ -19,7 +19,9 @@ namespace SQLMonitoring.Model
 
         public string Password { get; set; }
     
-        public UserType AccountType { get; set; }
+        public UserType AccountType { get; set; } 
+
+        public bool EmailConfirmed { get; set; }
 
         public List<Server> ServerList { get; set; }
 
