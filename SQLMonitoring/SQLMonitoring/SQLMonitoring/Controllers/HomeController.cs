@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using SQLMonitoring.DatabaseConnection;
 using Microsoft.Extensions.Configuration;
 using SQLMonitoring.Utilities;
+using SQLMonitoring.Services;
 
 namespace SQLMonitoring.Controllers
 {
@@ -46,6 +47,7 @@ namespace SQLMonitoring.Controllers
         public async Task<IActionResult> Login(string email, string password)
         {
             ViewBag.ErrorMessage = "";
+            ViewBag.Message = "";
             ViewBag.IsAdmin = false;
 
             var adminUsername = _configuration.GetValue<string>("AdminUser:Username");
@@ -58,11 +60,20 @@ namespace SQLMonitoring.Controllers
                 return View("../Admin/AdminHomepage", users);
             }
 
-            var user = _db.Users.Where(user => user.Email == email && user.Password == password).FirstOrDefault();
+            var user = _db.Users.Where(user =>
+                user.Email == email &&
+                user.Password == CryptographyService.EncryptString(password))
+                .FirstOrDefault();
 
             if (user != null)
             {
-                return View("Homepage", user);
+                if (!user.EmailConfirmed)
+                {
+                    ViewBag.ErrorMessage = "Accout has not been validated !";
+                    return View("Index");
+                }
+
+                return RedirectToAction( "Profile", "User", new { id = user.Id });
             }
             else
             {
@@ -100,12 +111,18 @@ namespace SQLMonitoring.Controllers
                 return View("Signup");
             }
 
-            _db.Users.Add(new Model.User() { AccountType = UserType.CLIENT, Email = email, Password = password, EmailConfirmed = false });
+            _db.Users.Add(new Model.User() { 
+                AccountType = UserType.CLIENT,
+                Email = email,
+                Password = CryptographyService.EncryptString(password),
+                EmailConfirmed = false });
+
             _db.SaveChanges();
 
             _emailService.SendEmail(email);
 
-            return View("EmailConfirmation");
+            ViewBag.Message = "Confirmation email has been sent. Please check your email to complete registration";
+            return View("Index");
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -113,5 +130,18 @@ namespace SQLMonitoring.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Confirmation(string email)
+        {
+            var rawEmail = CryptographyService.DecryptString(email);
+
+            var user = _db.Users.Where(user => user.Email == rawEmail).FirstOrDefault();
+            user.EmailConfirmed = true;
+            _db.SaveChanges();
+
+            return RedirectToAction("User", "Profile", new { user = user });
+        }
+
     }
 }

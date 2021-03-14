@@ -20,7 +20,7 @@
                 @Html.DisplayFor(modelItem => item.Email)
             </td>
             <td>|
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                @Html.ActionLink("Delete", "Delete", "User", new { id = item.Id }, new { onclick = "return confirm('Click yes to confirm deletion');" })
             </td>
         </tr>
 }
