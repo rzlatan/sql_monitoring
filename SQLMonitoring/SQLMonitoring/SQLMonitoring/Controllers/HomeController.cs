@@ -11,6 +11,7 @@ using SQLMonitoring.DatabaseConnection;
 using Microsoft.Extensions.Configuration;
 using SQLMonitoring.Utilities;
 using SQLMonitoring.Services;
+using System.Web;
 
 namespace SQLMonitoring.Controllers
 {
@@ -73,6 +74,7 @@ namespace SQLMonitoring.Controllers
                     return View("Index");
                 }
 
+                HttpContext.Session.Set("Id", BitConverter.GetBytes(user.Id));
                 return RedirectToAction( "Profile", "User", new { id = user.Id });
             }
             else
@@ -141,6 +143,15 @@ namespace SQLMonitoring.Controllers
             _db.SaveChanges();
 
             return RedirectToAction("User", "Profile", new { user = user });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Logout()
+        {
+            ViewBag.Message = "";
+            ViewBag.ErrorMessage = "";
+            HttpContext.Session.Set("Id", BitConverter.GetBytes(-1));
+            return View("Index");
         }
 
     }
