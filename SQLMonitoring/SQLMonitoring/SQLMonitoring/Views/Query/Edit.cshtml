@@ -1,6 +1,7 @@
-﻿
+﻿@model IEnumerable<SQLMonitoring.Model.Server>
+
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Query Editor";
 }
 
 
@@ -32,6 +33,54 @@
             //do whatever you want
         });
     });
+
+    var db = "";
+    var srv = "";
+
+    function selectServer(srvName) {
+        srv = srvName
+    }
+
+    function selectDb(dbName) {
+        db = dbName;
+    }
+
+    function clearTSQL(){
+        var editor = window.myCodeMirror;
+        var mirror = editor.setValue("");
+    }
+
+
+    $(function () {
+        $("#execute").click(function () {
+            var editor = window.myCodeMirror;
+            var queryTextValue = editor.getValue();
+            var databaseValue = db;
+            var serverValue = srv;
+
+            var targetUrl = '@Url.Action("Execute", "Query")?server=' + serverValue + "&database=" + databaseValue + "&queryText=" + queryTextValue;
+
+            $.ajax({
+                type: "GET",
+                url: targetUrl,
+                success: function () {
+                    prompt("Congrats!")
+                },
+                error: function () {
+                    alert("Error while inserting data");
+                }
+            });
+        });
+    });
+
+    function executeQuery() {
+        var database = db;
+        var server = srv;
+
+        var editor = window.myCodeMirror;
+        var queryText = editor.getValue();
+    }
+
 </script>
 
 <div class="list-group" style="width:25%;margin-left:-25%;margin-top:4%;">
@@ -46,4 +95,32 @@
 <div class="container" style="position:absolute;width:1500px;top:130px;left:500px;">
     <textarea id='editor'>
     </textarea>
+</div>
+
+<div class="container" style="position:absolute;left:500px;">
+    <button type="button" class="btn btn-success" id="execute">Execute</button>
+    <button type="button" class="btn btn-secondary" onclick="clearTSQL();">Clear</button>
+</div>
+
+<div class="container" style="position:absolute;width:15%;left:120px;top:460px;">
+    <div class="panel-group" id="accordion">
+        @foreach (var item in Model)
+        {
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a data-toggle="collapse" data-parent="#accordion" href="#@item.ServerName" onclick="selectServer('@item.ServerName');">@item.ServerName</a>
+                    </h4>
+                </div>
+                <div id="@item.ServerName" class="panel-collapse collapse">
+                    @foreach (var database in item.DatabaseList)
+                    {
+                        <div class="panel-body" id="#@database">
+                            <a href="#" onclick="selectDb('@database');">@database</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+     </div>
 </div>
