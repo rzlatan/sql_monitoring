@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using SQLMonitoring.Model;
+using Microsoft.Extensions.Configuration;
 
 namespace SQLMonitoring.DatabaseConnection
 {
     public class DatabaseContext : DbContext
     {
-        public DatabaseContext(DbContextOptions<DatabaseContext> options)
+        public DatabaseContext(DbContextOptions<DatabaseContext> options, IConfiguration configuration)
             : base(options)
         {
         }

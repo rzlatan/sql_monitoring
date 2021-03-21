@@ -8,6 +8,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
+
 
 namespace SQLMonitoring.Controllers
 {
@@ -29,6 +32,18 @@ namespace SQLMonitoring.Controllers
         public IActionResult Index()
         {
             return View();
+        }
+
+        [HttpGet]
+        public IActionResult Home()
+        {
+            byte[] userIdByteArray;
+            HttpContext.Session.TryGetValue("Id", out userIdByteArray);
+            int userId = BitConverter.ToInt32(userIdByteArray);
+
+            var servers = _db.Servers.Include(srv => srv.Owner).Where(server => server.Owner.Id == userId);
+
+            return View("../Server/Home", servers);
         }
 
         [HttpGet]
@@ -55,6 +70,7 @@ namespace SQLMonitoring.Controllers
             if (password != confirmPassword)
             {
                 ViewBag.ErrorMessage = "Password and password confirmation must match";
+                return View("../Server/Add");
             }
 
             var owner = _db.Users.Where(user => user.Id == userId).FirstOrDefault();
@@ -62,14 +78,14 @@ namespace SQLMonitoring.Controllers
 
             server.Owner = owner;
             server.ServerName = serverName;
-            server.UserName = CryptographyService.EncryptString(username);
+            server.UserName = username;
             server.Password = CryptographyService.EncryptString(password);
 
             _db.Servers.Add(server);
             _db.SaveChanges();
 
             var servers = _db.Servers.Where(server => server.Owner == owner);
-            return View("../Server/List");
+            return RedirectToAction("Home");
         }
     }
 }
