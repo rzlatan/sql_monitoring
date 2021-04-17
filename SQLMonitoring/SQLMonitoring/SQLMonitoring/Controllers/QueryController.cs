@@ -10,6 +10,7 @@ using SQLMonitoring.Collections;
 using SQLMonitoring.Services;
 using SQLMonitoring.Models;
 using SQLMonitoring.Model;
+using SQLMonitoring.Query;
 
 namespace SQLMonitoring.Controllers
 {
@@ -32,54 +33,21 @@ namespace SQLMonitoring.Controllers
         }
 
         [HttpGet]
-        public IActionResult Execute(string server, string database, string queryText)
+        public JsonResult Execute(string server, string database, string queryText)
         {
-            SqlConnection connection = null;
-            SqlCommand cmd = null;
-            SqlDataReader dataReader = null;
             var connectionStringTemplate = _configuration.GetValue<string>("Templates:ServerConnectionString");
             Server srv = _db.Servers.Where(srv => srv.ServerName == server).FirstOrDefault();
 
-            try
-            {
-                var connectionString = string.Format(
-                    connectionStringTemplate,
-                    server,
-                    database,
-                    srv.UserName,
-                    CryptographyService.DecryptString(srv.Password));
+            var connectionString = string.Format(
+                connectionStringTemplate,
+                server,
+                database,
+                srv.UserName,
+                CryptographyService.DecryptString(srv.Password));
 
-                connection = new SqlConnection(connectionString);
-                connection.Open();
+            var result = QueryBase.GenerateQuery(queryText, connectionString).Execute();
 
-                cmd = new SqlCommand(queryText, connection);
-                dataReader = cmd.ExecuteReader();
-                while (dataReader.Read())
-                {
-                    
-                }
-
-                dataReader.Close();
-
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-            }
-            finally
-            {
-                if (connection != null)
-                {
-                    connection.Close();
-                }
-
-                if (dataReader != null)
-                {
-                    dataReader.Close();
-                }
-            }
-
-            return null;
+            return Json(result);
         }
 
         [HttpGet]

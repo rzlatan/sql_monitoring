@@ -63,8 +63,21 @@
             $.ajax({
                 type: "GET",
                 url: targetUrl,
-                success: function () {
-                    prompt("Congrats!")
+                success: function (data) {
+                    command = data.split("-")[0]
+                    result = data.split("-")[1]
+
+                    if (isNaN(result)) {
+                        document.getElementById("queryError").style.visibility = "visible"
+                        document.getElementById("queryError").className = "alert alert-danger";
+                        document.getElementById("queryError").innerHTML = "Error occurred while executing T-SQL statement";
+                    } else {
+                        document.getElementById("queryError").style.visibility = "visible";
+                        document.getElementById("queryError").className = "alert alert-danger";
+                        document.getElementById("queryError").innerHTML = "SUCCESS: " + result + " rows affected";
+                    }
+
+                    prompt(" Command " + command + " , data " + result)
                 },
                 error: function () {
                     alert("Error while inserting data");
@@ -92,14 +105,18 @@
     <a asp-area="" asp-controller="Home" asp-action="Logout" class="list-group-item"><i class="fa fa-sign-out"></i> <span>&nbsp;&nbsp;&nbsp;Sign Out</span></a>
 </div>
 
-<div class="container" style="position:absolute;width:1500px;top:130px;left:500px;">
+<div class="container" style="position:absolute;width:1500px;top:110px;left:500px;">
     <textarea id='editor'>
     </textarea>
 </div>
 
-<div class="container" style="position:absolute;left:500px;">
+<div class="container" style="position:absolute;left:500px;top:430px;">
     <button type="button" class="btn btn-success" id="execute">Execute</button>
     <button type="button" class="btn btn-secondary" onclick="clearTSQL();">Clear</button>
+</div>
+
+<div class="alert alert-danger" role="alert" id="queryError" style="position:absolute;left:500px;top:500px;width:1500px;">
+    Error occurred while executing query
 </div>
 
 <div class="container" style="position:absolute;width:15%;left:120px;top:460px;">
