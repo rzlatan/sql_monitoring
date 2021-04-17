@@ -73,11 +73,9 @@
                         document.getElementById("queryError").innerHTML = "Error occurred while executing T-SQL statement";
                     } else {
                         document.getElementById("queryError").style.visibility = "visible";
-                        document.getElementById("queryError").className = "alert alert-danger";
-                        document.getElementById("queryError").innerHTML = "SUCCESS: " + result + " rows affected";
+                        document.getElementById("queryError").className = "alert alert-success";
+                        document.getElementById("queryError").innerHTML = "Query executed successfully: " + result + " rows affected";
                     }
-
-                    prompt(" Command " + command + " , data " + result)
                 },
                 error: function () {
                     alert("Error while inserting data");
