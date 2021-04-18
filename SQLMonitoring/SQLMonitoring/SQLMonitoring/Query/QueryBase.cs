@@ -10,7 +10,8 @@ namespace SQLMonitoring.Query
         INSERT,
         UPDATE,
         DELETE,
-        SELECT
+        SELECT,
+        DDL
     }
 
     public abstract class QueryBase
@@ -34,7 +35,10 @@ namespace SQLMonitoring.Query
                     return new DeleteQuery(query, connectionString);
                     break;
                 case "SELECT":
+                    return new SelectQuery(query, connectionString);
                     break;
+                default:
+                    return new DDLQuery(query, connectionString);
             }
 
             return null;

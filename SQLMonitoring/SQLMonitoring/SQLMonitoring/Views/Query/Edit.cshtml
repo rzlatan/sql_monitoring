@@ -48,6 +48,8 @@
     function clearTSQL(){
         var editor = window.myCodeMirror;
         var mirror = editor.setValue("");
+        document.getElementById("queryError").style.visibility = "hidden";
+        document.getElementById("selectTable").style.visibility = "hidden";
     }
 
 
@@ -58,6 +60,16 @@
             var databaseValue = db;
             var serverValue = srv;
 
+            document.getElementById("queryError").style.visibility = "hidden";
+            document.getElementById("selectTable").style.visibility = "hidden";
+
+            if (!databaseValue ||
+                !serverValue ||
+                !queryTextValue) {
+                    alert("Please select target server and database, and enter query text")
+                    return
+            }
+
             var targetUrl = '@Url.Action("Execute", "Query")?server=' + serverValue + "&database=" + databaseValue + "&queryText=" + queryTextValue;
 
             $.ajax({
@@ -65,16 +77,27 @@
                 url: targetUrl,
                 success: function (data) {
                     command = data.split("-")[0]
-                    result = data.split("-")[1]
 
-                    if (isNaN(result)) {
-                        document.getElementById("queryError").style.visibility = "visible"
-                        document.getElementById("queryError").className = "alert alert-danger";
-                        document.getElementById("queryError").innerHTML = "Error occurred while executing T-SQL statement";
+                    if (command == "SELECT") {
+                        parseSelectResult(data)
                     } else {
-                        document.getElementById("queryError").style.visibility = "visible";
-                        document.getElementById("queryError").className = "alert alert-success";
-                        document.getElementById("queryError").innerHTML = "Query executed successfully: " + result + " rows affected";
+                        result = data.split("-")[1]
+                        document.getElementById("selectTable").style.visibility = "hidden"
+
+                        if (isNaN(result)) {
+                            document.getElementById("queryError").style.visibility = "visible"
+                            document.getElementById("queryError").className = "alert alert-danger";
+                            document.getElementById("queryError").innerHTML = "Error occurred while executing T-SQL statement";
+                        } else {
+                            document.getElementById("queryError").style.visibility = "visible";
+                            document.getElementById("queryError").className = "alert alert-success";
+
+                            if (command == "DDL") {
+                                document.getElementById("queryError").innerHTML = "Commands completed successfully";
+                            } else {
+                                document.getElementById("queryError").innerHTML = "Query executed successfully: " + result + " rows affected";
+                            }
+                        }
                     }
                 },
                 error: function () {
@@ -83,6 +106,90 @@
             });
         });
     });
+
+    function parseSelectResult(data) {
+        document.getElementById("queryError").style.visibility = "hidden"
+        splittedResult = data.split("-");
+        result = ""
+
+        if (data == "SELECT-") {
+            document.getElementById("queryError").style.visibility = "visible"
+            document.getElementById("queryError").className = "alert alert-warning";
+            document.getElementById("queryError").innerHTML = "Query has returned no rows";
+            return
+        }
+
+        if (splittedResult.length > 1 && String(splittedResult[1]).toLowerCase().startsWith("error")){
+            document.getElementById("queryError").style.visibility = "visible"
+            document.getElementById("queryError").className = "alert alert-danger";
+            document.getElementById("queryError").innerHTML = "Error occurred while executing T-SQL statement";
+            return
+        }
+
+        for (i = 1; i < splittedResult.length; i++)
+            result += splittedResult[i]
+
+        var tableHtml = "<table class='table'>"
+
+        tableHtml = generateSelectStatementColumns(result, tableHtml)
+        tableHtml = generateSelectStatementRows(result, tableHtml)
+
+        tableHtml += "</table>"
+
+        document.getElementById("selectTable").innerHTML = tableHtml
+        document.getElementById("selectTable").style.visibility = "visible"
+    }
+
+    function generateSelectStatementColumns(result, tableHtml) {
+        words = result.split("~")
+        i = 0
+
+        while (i < words.length && words[i] != "COLUMNS") {
+            i++;
+        }
+
+        i++;
+
+        tableHtml += "<tr>"
+
+        while (i < words.length && words[i] != "NEWROW") {
+            tableHtml += "<th scope='col'>" + words[i] + "</th>"
+            i++;
+        }
+
+        tableHtml += "<tr>"
+
+        return tableHtml
+    }
+
+    function generateSelectStatementRows(result, tableHtml) {
+        words = result.split("~");
+        i = 0;
+
+        while (i < words.length && words[i] != "NEWROW") {
+            i++;
+        }
+
+        i++;
+
+        tableHtml += "<tr>"
+
+        while (i < words.length) {
+            while (words[i] != "NEWROW" && i < words.length) {
+                tableHtml += "<td>" + words[i] + "</td>"
+                i++;
+            }
+
+            tableHtml += "</tr>"
+
+            if (i < words.length) {
+                tableHtml += "<tr>"
+                i++;
+            }
+        }
+
+        return tableHtml
+    }
 
     function executeQuery() {
         var database = db;
@@ -113,8 +220,11 @@
     <button type="button" class="btn btn-secondary" onclick="clearTSQL();">Clear</button>
 </div>
 
-<div class="alert alert-danger" role="alert" id="queryError" style="position:absolute;left:500px;top:500px;width:1500px;">
+<div class="alert alert-danger" role="alert" id="queryError" style="position:absolute;left:500px;top:500px;width:1500px;visibility:hidden;">
     Error occurred while executing query
+</div>
+
+<div id="selectTable" style="position: absolute;left: 500px;top: 500px;width: 1500px;visibility: hidden;overflow-y: scroll;height:300px">
 </div>
 
 <div class="container" style="position:absolute;width:15%;left:120px;top:460px;">
@@ -137,5 +247,5 @@
                 </div>
             </div>
         }
-     </div>
+    </div>
 </div>

@@ -6,17 +6,17 @@ using System.Threading.Tasks;
 
 namespace SQLMonitoring.Query
 {
-    public class InsertQuery : QueryBase
+    public class DDLQuery : QueryBase
     {
-        public InsertQuery(string queryText, string connectionString) 
+        public DDLQuery(string queryText, string connectionString)
             : base(queryText, connectionString)
         {
-            this.QueryType = QueryType.INSERT;
+            this.QueryType = QueryType.DDL;
         }
 
         public override string Execute()
         {
-            string result = "INSERT-";
+            string result = "DDL-";
             SqlConnection connection = null;
 
             try
@@ -25,8 +25,8 @@ namespace SQLMonitoring.Query
                 connection.Open();
 
                 var command = new SqlCommand(QueryText, connection);
-                command.ExecuteNonQuery();
-                result += "1";
+                var affectedRows = command.ExecuteNonQuery();
+                result += affectedRows.ToString();
 
                 connection.Close();
             }
