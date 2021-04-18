@@ -16,6 +16,8 @@ namespace SQLMonitoring.Model
 
         public string Password { get; set; }
 
+        public bool SmartPredictionsEnabled { get; set; }
+
         public User Owner { get; set; }
 
         public List<Report> ReportList { get; set; }
