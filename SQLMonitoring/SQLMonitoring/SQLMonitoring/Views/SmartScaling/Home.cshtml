@@ -1,0 +1,53 @@
+﻿@model IEnumerable<SQLMonitoring.Model.Server>
+
+@{
+    ViewData["Title"] = "Query Editor";
+}
+
+
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+<link href="~/css/site.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.47.0/codemirror.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.47.0/codemirror.min.css">
+<script src="~/js/sql.js"></script>
+
+<script type="text/javascript">
+    var db = "";
+    var srv = "";
+
+    function selectServer(srvName) {
+        srv = srvName
+    }
+
+    function selectDb(dbName) {
+        db = dbName;
+    }
+</script>
+
+<div class="list-group" style="width:25%;margin-left:-25%;margin-top:4%;">
+    <a asp-area="" asp-controller="User" asp-action="Profile" class="list-group-item"><i class="fa fa-user-circle-o"></i> <span>&nbsp;&nbsp;&nbsp;Profile</span></a>
+    <a asp-area="" asp-controller="Server" asp-action="Home" class="list-group-item"><i class="fa fa-database"></i> <span>&nbsp;&nbsp;&nbsp;Servers</span></a>
+    <a asp-area="" asp-controller="Report" asp-action="Home" class="list-group-item"><i class="fa fa-sticky-note-o"></i> <span>&nbsp;&nbsp;&nbsp;Reports</span></a>
+    <a asp-area="" asp-controller="Server" asp-action="Add" class="list-group-item"><i class="fa fa-server"></i> <span>&nbsp;&nbsp;&nbsp;Add Server</span></a>
+    <a asp-area="" asp-controller="Query" asp-action="Edit" class="list-group-item"><i class="fa fa-table"></i> <span>&nbsp;&nbsp;&nbsp;Query Editor</span></a>
+    <a asp-area="" asp-controller="SmartScaling" asp-action="Home" class="list-group-item" active><i class="fa fa-lightbulb-o"></i><span>&nbsp;&nbsp;&nbsp; Smart scaling</span></a>
+    <a asp-area="" asp-controller="Home" asp-action="Logout" class="list-group-item"><i class="fa fa-sign-out"></i> <span>&nbsp;&nbsp;&nbsp;Sign Out</span></a>
+</div>
+
+<div class="container" style="position:absolute;width:15%;left:120px;top:460px;">
+    <div class="panel-group" id="accordion">
+        @foreach (var item in Model)
+        {
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a data-toggle="collapse" data-parent="#accordion" href="#@item.ServerName" onclick="selectServer('@item.ServerName');">@item.ServerName</a>
+                    </h4>
+                </div>
+            </div>
+        }
+    </div>
+</div>
