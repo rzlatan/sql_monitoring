@@ -17,6 +17,11 @@
 
   <ItemGroup>
     <None Include="wwwroot\logo.png" />
+    <None Include="wwwroot\SmartScaling.ps1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="SmartScaling\" />
   </ItemGroup>
 
 </Project>

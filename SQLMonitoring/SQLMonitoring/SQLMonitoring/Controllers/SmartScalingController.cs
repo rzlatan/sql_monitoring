@@ -37,5 +37,12 @@ namespace SQLMonitoring.Controllers
 
             return View("../SmartScaling/Home", servers);
         }
+
+        [HttpPost]
+        public IActionResult UploadStats(string Timestamp, string Server, string Cpu, string Memory, string Network, string Disk)
+        {
+            Console.WriteLine("blabbla");
+            return null;
+        }
     }
 }

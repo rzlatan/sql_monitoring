@@ -37,6 +37,22 @@
     <a asp-area="" asp-controller="Home" asp-action="Logout" class="list-group-item"><i class="fa fa-sign-out"></i> <span>&nbsp;&nbsp;&nbsp;Sign Out</span></a>
 </div>
 
+<div class="callout callout-warning" style="position:absolute;width:1500px;top:110px;left:500px;">
+    <h4>Smart Scaling</h4>
+    Smart scaling is a feature that collects the data on the server level and makes smart decisions that will help the customer predict the heavy workload, peak hours,<br />
+    and resource bottlenecks based on historical statistics on the server level, recommending smart scale up/scale down decisions.
+
+    <br /><br />
+
+    To configure and enable smart scaling prediction, it is only necessary to execute <a href="C:\SQLProjects\sql_monitoring\SQLMonitoring\SQLMonitoring\SQLMonitoring\wwwroot\SmartScaling.ps1" download> this script </a>  on the server machine which will periodically collect statistics and upload <br /> them on the server
+    where they can be used for the further analysis.
+
+    <br /><br />
+
+    To continue, please select the server from the server list to see the scaling predictions, or download the script from the link above and setup the smart scaling for <br />
+    wanted servers.
+</div>
+
 <div class="container" style="position:absolute;width:15%;left:120px;top:460px;">
     <div class="panel-group" id="accordion">
         @foreach (var item in Model)
