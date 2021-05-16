@@ -56,6 +56,6 @@ while ($true)
 	Write-Host "Current stats: $Body" 
 	Invoke-RestMethod -Method "Post" -Uri $Url -Body $Body
 	
-	Write-Host "Sleeping for 30 seconds"
-	Start-Sleep -Seconds 30
+	Write-Host "Sleeping for one minute"
+	Start-Sleep -Seconds 60
 }
