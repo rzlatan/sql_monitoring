@@ -25,6 +25,7 @@
     function selectDb(dbName) {
         db = dbName;
     }
+
 </script>
 
 <div class="list-group" style="width:25%;margin-left:-25%;margin-top:4%;">
@@ -53,6 +54,13 @@
     wanted servers.
 </div>
 
+@if (@ViewBag.SmartStatsErrorMessage != null && @ViewBag.SmartStatsErrorMessage != "")
+{
+    <div id="infomessage" class="alert alert-danger" role="alert" style="position:absolute;width:1400px;top:460px;left:500px;">
+        @ViewBag.SmartStatsErrorMessage
+    </div>
+}
+
 <div class="container" style="position:absolute;width:15%;left:120px;top:460px;">
     <div class="panel-group" id="accordion">
         @foreach (var item in Model)
@@ -60,7 +68,7 @@
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h4 class="panel-title">
-                        <a data-toggle="collapse" data-parent="#accordion" href="#@item.ServerName" onclick="selectServer('@item.ServerName');">@item.ServerName</a>
+                        <a asp-controller="SmartScaling" asp-action="Check" asp-route-server="@item.ServerName">@item.ServerName</a>
                     </h4>
                 </div>
             </div>
