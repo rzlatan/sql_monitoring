@@ -19,5 +19,6 @@ namespace SQLMonitoring.DatabaseConnection
         public DbSet<Server> Servers { get; set; }
         public DbSet<Report> Reports { get; set; }
         public DbSet<SmartPredictionStats> SmartPredictionStats { get; set; }
+        public DbSet<BasicResourceUsage> BasicResourceUsageStats { get; set; }
     }
 }

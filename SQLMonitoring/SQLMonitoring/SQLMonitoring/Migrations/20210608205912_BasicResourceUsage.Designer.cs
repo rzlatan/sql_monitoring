@@ -3,54 +3,23 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SQLMonitoring.DatabaseConnection;
 
 namespace SQLMonitoring.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20210608205912_BasicResourceUsage")]
+    partial class BasicResourceUsage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("ProductVersion", "5.0.3")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-            modelBuilder.Entity("SQLMonitoring.Model.BasicResourceUsage", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<double>("BatchRequests")
-                        .HasColumnType("float");
-
-                    b.Property<double>("CpuUsage")
-                        .HasColumnType("float");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<double>("MemoryUsage")
-                        .HasColumnType("float");
-
-                    b.Property<double>("NetworkUsage")
-                        .HasColumnType("float");
-
-                    b.Property<string>("ServerName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("UserConnections")
-                        .HasColumnType("float");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("BasicResourceUsageStats");
-                });
 
             modelBuilder.Entity("SQLMonitoring.Model.Report", b =>
                 {
