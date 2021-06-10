@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SQLMonitoring.DatabaseConnection;
 
 namespace SQLMonitoring.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20210610222401_database id added")]
+    partial class databaseidadded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -160,9 +162,6 @@ namespace SQLMonitoring.Migrations
                     b.Property<int?>("BasicInformationId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("DbId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Location")
                         .HasColumnType("nvarchar(max)");
 
@@ -184,8 +183,6 @@ namespace SQLMonitoring.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BasicInformationId");
-
-                    b.HasIndex("DbId");
 
                     b.ToTable("DatabaseFile");
                 });
@@ -322,12 +319,6 @@ namespace SQLMonitoring.Migrations
                     b.HasOne("SQLMonitoring.Model.BasicInformation", null)
                         .WithMany("DatabaseFiles")
                         .HasForeignKey("BasicInformationId");
-
-                    b.HasOne("SQLMonitoring.Model.Database", "Db")
-                        .WithMany()
-                        .HasForeignKey("DbId");
-
-                    b.Navigation("Db");
                 });
 
             modelBuilder.Entity("SQLMonitoring.Model.Report", b =>

@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SQLMonitoring.DatabaseConnection;
 
 namespace SQLMonitoring.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20210610221018_wrong name for column")]
+    partial class wrongnameforcolumn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -110,31 +112,16 @@ namespace SQLMonitoring.Migrations
                     b.Property<int?>("BasicInformationId")
                         .HasColumnType("int");
 
-                    b.Property<int>("DatabaseId")
-                        .HasColumnType("int");
-
                     b.Property<string>("DatabaseSize")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("IndexSize")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("IsEncrypted")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("RecoveryModel")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("ReservedSize")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SnapshotIsolationLevel")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("State")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UnusedSize")
@@ -160,9 +147,6 @@ namespace SQLMonitoring.Migrations
                     b.Property<int?>("BasicInformationId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("DbId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Location")
                         .HasColumnType("nvarchar(max)");
 
@@ -175,17 +159,12 @@ namespace SQLMonitoring.Migrations
                     b.Property<double>("Size")
                         .HasColumnType("float");
 
-                    b.Property<string>("State")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Type")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("BasicInformationId");
-
-                    b.HasIndex("DbId");
 
                     b.ToTable("DatabaseFile");
                 });
@@ -322,12 +301,6 @@ namespace SQLMonitoring.Migrations
                     b.HasOne("SQLMonitoring.Model.BasicInformation", null)
                         .WithMany("DatabaseFiles")
                         .HasForeignKey("BasicInformationId");
-
-                    b.HasOne("SQLMonitoring.Model.Database", "Db")
-                        .WithMany()
-                        .HasForeignKey("DbId");
-
-                    b.Navigation("Db");
                 });
 
             modelBuilder.Entity("SQLMonitoring.Model.Report", b =>
