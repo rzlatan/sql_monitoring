@@ -51,6 +51,45 @@ namespace SQLMonitoring.Controllers
             _db.SaveChanges();
         }
 
+        [HttpPost]
+        public void GlobalWaitStats(string Timestamp, string Server, string WaitType, string WaitTimeMs, string MaxWaitTimeMs, string SignalWaitTimeMs)
+        {
+            GlobalWaitStats stats = new GlobalWaitStats();
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.ServerName = Server;
+            stats.WaitType = WaitType;
+            stats.WaitTimeMs = long.Parse(WaitTimeMs);
+            stats.MaxWaitTimeMs = long.Parse(MaxWaitTimeMs);
+            stats.SignalWaitTimeMs = long.Parse(SignalWaitTimeMs);
+
+            _db.GlobalWaitStats.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
+        public void GlobalSpinlockStats(string Timestamp, string Server, string Spinlock, string Collisions, string Backoffs)
+        {
+            GlobalSpinlockStats stats = new Model.GlobalSpinlockStats();
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.Server = Server;
+            stats.Spinlock = Spinlock;
+            stats.Collisions = long.Parse(Collisions);
+            stats.Backoffs = long.Parse(Backoffs);
+
+            _db.GlobalSpinlockStats.Add(stats);
+            _db.SaveChanges();
+        }
+
         [HttpGet]
         public void GenerateBasicInformation(string serverName)
         {

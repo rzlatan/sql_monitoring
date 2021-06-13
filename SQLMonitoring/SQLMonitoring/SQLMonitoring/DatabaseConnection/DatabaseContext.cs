@@ -21,5 +21,7 @@ namespace SQLMonitoring.DatabaseConnection
         public DbSet<SmartPredictionStats> SmartPredictionStats { get; set; }
         public DbSet<BasicResourceUsage> BasicResourceUsageStats { get; set; }
         public DbSet<BasicInformation> BasicInformationStats { get; set; }
+        public DbSet<GlobalWaitStats> GlobalWaitStats { get; set; }
+        public DbSet<GlobalSpinlockStats> GlobalSpinlockStats { get; set; }
     }
 }

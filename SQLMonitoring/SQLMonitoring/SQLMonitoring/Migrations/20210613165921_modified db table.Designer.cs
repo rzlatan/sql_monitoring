@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SQLMonitoring.DatabaseConnection;
 
 namespace SQLMonitoring.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20210613165921_modified db table")]
+    partial class modifieddbtable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -179,63 +181,6 @@ namespace SQLMonitoring.Migrations
                     b.HasIndex("DbId");
 
                     b.ToTable("DatabaseFile");
-                });
-
-            modelBuilder.Entity("SQLMonitoring.Model.GlobalSpinlockStats", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<long>("Backoffs")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("Collisions")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Server")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Spinlock")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("GlobalSpinlockStats");
-                });
-
-            modelBuilder.Entity("SQLMonitoring.Model.GlobalWaitStats", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("MaxWaitTimeMs")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ServerName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<long>("SignalWaitTimeMs")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("WaitTimeMs")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("WaitType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("GlobalWaitStats");
                 });
 
             modelBuilder.Entity("SQLMonitoring.Model.Report", b =>
