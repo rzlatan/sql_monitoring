@@ -51,6 +51,7 @@ namespace SQLMonitoring.Controllers
             _db.SaveChanges();
         }
 
+        [HttpGet]
         public void GenerateBasicInformation(string serverName)
         {
             byte[] userIdByteArray;
@@ -89,6 +90,7 @@ namespace SQLMonitoring.Controllers
                 {
                     basicInformation.ServerVersion = (string)dataReader.GetValue(0);
                 }
+                dataReader.Close();
 
                 // Server Edition
                 //
@@ -98,6 +100,7 @@ namespace SQLMonitoring.Controllers
                 {
                     basicInformation.Edition = (string)dataReader.GetValue(0);
                 }
+                dataReader.Close();
 
                 // HADR
                 //
@@ -105,8 +108,9 @@ namespace SQLMonitoring.Controllers
                 dataReader = cmd.ExecuteReader();
                 while (dataReader.Read())
                 {
-                    basicInformation.IsHADREnabled = (string)dataReader.GetValue(0);
+                    basicInformation.IsHADREnabled = dataReader.GetValue(0).ToString();
                 }
+                dataReader.Close();
 
                 // XTP
                 //
@@ -114,8 +118,9 @@ namespace SQLMonitoring.Controllers
                 dataReader = cmd.ExecuteReader();
                 while (dataReader.Read())
                 {
-                    basicInformation.IsXTPEnabled = (string)dataReader.GetValue(0);
+                    basicInformation.IsXTPEnabled = dataReader.GetValue(0).ToString();
                 }
+                dataReader.Close();
 
                 // Collation
                 //
@@ -123,8 +128,9 @@ namespace SQLMonitoring.Controllers
                 dataReader = cmd.ExecuteReader();
                 while (dataReader.Read())
                 {
-                    basicInformation.Collation = (string)dataReader.GetValue(0);
+                    basicInformation.Collation = dataReader.GetValue(0).ToString();
                 }
+                dataReader.Close();
 
                 // Compat level
                 //
@@ -132,12 +138,96 @@ namespace SQLMonitoring.Controllers
                 dataReader = cmd.ExecuteReader();
                 while (dataReader.Read())
                 {
-                    basicInformation.CompatLevel = (string)dataReader.GetValue(0);
+                    basicInformation.CompatLevel = dataReader.GetValue(0).ToString();
                 }
-
-
                 dataReader.Close();
 
+                // Basic VM info
+                //
+                cmd = new SqlCommand(QueryCollection.BaseVmInfo, connection);
+                dataReader = cmd.ExecuteReader();
+                while (dataReader.Read())
+                {
+                    basicInformation.ProcessorCount = dataReader.GetValue(0).ToString();
+                    basicInformation.Memory = dataReader.GetValue(1).ToString();
+                    basicInformation.HyperThreadRatio = dataReader.GetValue(2).ToString();
+                    basicInformation.WorkerCount = (int) dataReader.GetValue(3);
+                }
+                dataReader.Close();
+
+                // Databases
+                //
+                List<Database> databaseList = new List<Database>();
+                cmd = new SqlCommand(QueryCollection.DatabaseInfo, connection);
+                dataReader = cmd.ExecuteReader();
+                while(dataReader.Read())
+                {
+                    Database database = new Database();
+
+                    database.DatabaseId = (int) dataReader.GetValue(0);
+                    database.Name = (string) dataReader.GetValue(1);
+                    database.State = (string) dataReader.GetValue(2);
+                    database.SnapshotIsolationLevel = (string)dataReader.GetValue(3);
+                    database.RecoveryModel = (string)dataReader.GetValue(4);
+                    database.IsEncrypted = dataReader.GetValue(5).ToString();
+
+                    var dbConnectionString = string.Format(
+                        connectionStringTemplate,
+                        server.ServerName,
+                        "'" + database.Name + "'",
+                        server.UserName,
+                        CryptographyService.DecryptString(server.Password));
+
+                    SqlConnection dbConnection = new SqlConnection(connectionString);
+                    var dbSizeQuery = string.Format(
+                            QueryCollection.DatabaseSizes,
+                            database.Name);
+
+                    dbConnection.Open();
+                    SqlCommand additionalInfoCmd = new SqlCommand(dbSizeQuery, dbConnection);
+                    SqlDataReader dataReaderAdditional = null;
+
+                    dataReaderAdditional = additionalInfoCmd.ExecuteReader();
+
+                    while (dataReaderAdditional.Read())
+                    {
+                        database.DatabaseSize = dataReaderAdditional.GetValue(0).ToString();
+
+                    }
+
+                    dataReaderAdditional.Close();
+                    dbConnection.Close();
+
+                    databaseList.Add(database);
+                }
+                dataReader.Close();
+                basicInformation.Databases = databaseList;
+
+                // Database files
+                //
+                List<DatabaseFile> databaseFiles = new List<DatabaseFile>();
+                cmd = new SqlCommand(QueryCollection.DatabaseFiles, connection);
+                dataReader = cmd.ExecuteReader();
+
+                while (dataReader.Read())
+                {
+                    DatabaseFile file = new DatabaseFile();
+                    file.Name = dataReader.GetValue(0).ToString();
+                    file.Location = dataReader.GetValue(1).ToString();
+                    file.Db = databaseList.Where(db => db.Id == (int)dataReader.GetValue(2)).FirstOrDefault();
+                    file.State = dataReader.GetValue(3).ToString();
+                    file.Type = dataReader.GetValue(4).ToString();
+                    file.Size = Double.Parse(dataReader.GetValue(5).ToString());
+                    file.MaxSize = dataReader.GetValue(6).ToString();
+                    file.AutoGrowth = dataReader.GetValue(7).ToString();
+
+                    databaseFiles.Add(file);
+                }
+                dataReader.Close();
+                basicInformation.DatabaseFiles = databaseFiles;
+
+                _db.BasicInformationStats.Add(basicInformation);
+                _db.SaveChanges();
             }
             catch (Exception e)
             {

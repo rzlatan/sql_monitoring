@@ -21,11 +21,5 @@ namespace SQLMonitoring.Model
         public string IsEncrypted { get; set; }
 
         public string DatabaseSize { get; set; }
-
-        public string IndexSize { get; set; }
-
-        public string ReservedSize { get; set; }
-
-        public string UnusedSize { get; set; }
     }
 }
