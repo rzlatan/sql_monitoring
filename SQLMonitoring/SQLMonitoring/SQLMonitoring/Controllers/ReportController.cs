@@ -90,6 +90,86 @@ namespace SQLMonitoring.Controllers
             _db.SaveChanges();
         }
 
+        [HttpPost]
+        public void UploadTop5CPUWorkloadGroups(string Timestamp, string Server, string WorkloadGroup, string WorkloadGroupCpuMs)
+        {
+            CPUStats stats = new Model.CPUStats();
+
+            stats.Type = CpuStatsType.Top5WorkloadGroupsByCPU;
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.ServerName = Server;
+            stats.WorkloadGroup = WorkloadGroup;
+            stats.WorkloadGroupCPUTime = long.Parse(WorkloadGroupCpuMs);
+
+            _db.GlobalCPUStats.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
+        public void UploadTop5CPUQueries(string Timestamp, string Server, string QueryHash, string QueryTime)
+        {
+            CPUStats stats = new Model.CPUStats();
+
+            stats.Type = CpuStatsType.Top5QueriesByCpu;
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.ServerName = Server;
+            stats.QueryHash = QueryHash;
+            stats.QueryExecTime = long.Parse(QueryTime);
+
+            _db.GlobalCPUStats.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
+        public void UploadTop5CPUQUploadCompileAndExecTimeueries(string Timestamp, string Server, string QueryExecTime, string QueryCompileTime)
+        {
+            CPUStats stats = new Model.CPUStats();
+
+            stats.Type = CpuStatsType.CompileAndExecCPU;
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.ServerName = Server;
+            stats.CompileCPUTime = long.Parse(QueryCompileTime);
+            stats.ExecCPUTime = long.Parse(QueryExecTime);
+
+            _db.GlobalCPUStats.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
+        public void UploadCpuTotalAndUserTime(string Timestamp, string Server, string TotalCpu, string UserCpu)
+        {
+            CPUStats stats = new Model.CPUStats();
+
+            stats.Type = CpuStatsType.TotalAndUserCPU;
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.ServerName = Server;
+            stats.CPUTotalTime = (long) double.Parse(TotalCpu);
+            stats.CPUUserTime = (long.Parse(UserCpu);
+
+            _db.GlobalCPUStats.Add(stats);
+            _db.SaveChanges();
+        }
+
         [HttpGet]
         public void GenerateBasicInformation(string serverName)
         {

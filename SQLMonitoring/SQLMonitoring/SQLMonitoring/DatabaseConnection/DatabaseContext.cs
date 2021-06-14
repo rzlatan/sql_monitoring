@@ -23,5 +23,6 @@ namespace SQLMonitoring.DatabaseConnection
         public DbSet<BasicInformation> BasicInformationStats { get; set; }
         public DbSet<GlobalWaitStats> GlobalWaitStats { get; set; }
         public DbSet<GlobalSpinlockStats> GlobalSpinlockStats { get; set; }
+        public DbSet<CPUStats> GlobalCPUStats { get; set; }
     }
 }
