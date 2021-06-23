@@ -51,7 +51,7 @@ while ($true)
     #####################################################################################
     # Top 5 queries by CPU
     #
-    $Top5CPUConsumingQueries = Invoke-SqlCmd -ServerInstance $ServerName -Query "SELECT TOP 5 query_hash, total_elapsed_time FROM sys.dm_exec_query_stats ORDER BY total_elapsed_time desc"
+    $Top5CPUConsumingQueries = Invoke-SqlCmd -ServerInstance $ServerName -Query "SELECT TOP 5 CONVERT(varchar(20), query_hash, 1) as query_hash, total_elapsed_time FROM sys.dm_exec_query_stats ORDER BY total_elapsed_time desc"
 	
     foreach ($Query in $Top5CPUConsumingQueries)
     {

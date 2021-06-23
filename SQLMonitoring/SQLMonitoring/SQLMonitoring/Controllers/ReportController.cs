@@ -131,7 +131,7 @@ namespace SQLMonitoring.Controllers
         }
 
         [HttpPost]
-        public void UploadTop5CPUQUploadCompileAndExecTimeueries(string Timestamp, string Server, string QueryExecTime, string QueryCompileTime)
+        public void UploadCompileAndExecTime(string Timestamp, string Server, string QueryExecTime, string QueryCompileTime)
         {
             CPUStats stats = new Model.CPUStats();
 
@@ -164,7 +164,7 @@ namespace SQLMonitoring.Controllers
 
             stats.ServerName = Server;
             stats.CPUTotalTime = (long) double.Parse(TotalCpu);
-            stats.CPUUserTime = (long.Parse(UserCpu);
+            stats.CPUUserTime = (long) double.Parse(UserCpu);
 
             _db.GlobalCPUStats.Add(stats);
             _db.SaveChanges();
