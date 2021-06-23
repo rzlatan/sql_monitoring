@@ -31,6 +31,63 @@ namespace SQLMonitoring.Controllers
         }
 
         [HttpPost]
+        public void UploadTotalAndTargetMemory(string Timestamp, string Server, string TotalMemory, string TargetMemory)
+        {
+            MemoryStats stats = new MemoryStats();
+
+            stats.Type = MemoryStatsType.TotalAndTargetMemory;
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.TotalMemory = long.Parse(TotalMemory);
+            stats.TargetMemory = long.Parse(TargetMemory);
+
+            _db.GlobalMemoryStats.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
+        public void UploadBufferHitRatioAndPageLifeExpectancy(string Timestamp, string Server, string BufferCacheHitRatio, string PageLifeExpectancy)
+        {
+            MemoryStats stats = new MemoryStats();
+            
+            stats.Type = MemoryStatsType.BufferHitRatioAndPageLifeExpectancy;
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.BufferCacheHitRatio = long.Parse(BufferCacheHitRatio);
+            stats.PageLifeExpectancy = long.Parse(PageLifeExpectancy);
+
+            _db.GlobalMemoryStats.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
+        public void UploadTop5MemoryClerks(string Timestamp, string Server, string MemoryClerk, string SizeMb)
+        {
+            MemoryStats stats = new MemoryStats();
+
+            stats.Type = MemoryStatsType.MemoryClerkStats;
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.MemoryClerk = MemoryClerk;
+            stats.MemoryClerkSize = long.Parse(SizeMb);
+
+            _db.GlobalMemoryStats.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
         public void UploadBasicResourceUsage(string Timestamp, string Server, string Cpu, string Memory, string Network, string Connections, string BatchRequests)
         {
             BasicResourceUsage stats = new BasicResourceUsage();
