@@ -78,7 +78,7 @@ while ($true)
 
     #####################################################################################
     # Top 5 plans by IOs
-     $UploadTop5IOPlans = Invoke-SqlCmd -ServerInstance $ServerName -Query "SELECT TOP 5 plan_id, avg_logical_io_reads + avg_logical_io_writes AS avg_logical_ios, avg_logical_io_reads, avg_logical_io_writes FROM sys.query_store_runtime_stats ORDER BY avg_logical_io_reads + avg_logical_io_writes DESC"
+     $Top5IOPlans = Invoke-SqlCmd -ServerInstance $ServerName -Query "SELECT TOP 5 plan_id, avg_logical_io_reads + avg_logical_io_writes AS avg_logical_ios, avg_logical_io_reads, avg_logical_io_writes FROM sys.query_store_runtime_stats ORDER BY avg_logical_io_reads + avg_logical_io_writes DESC"
 	
     foreach ($Plan in $Top5IOPlans)
     {

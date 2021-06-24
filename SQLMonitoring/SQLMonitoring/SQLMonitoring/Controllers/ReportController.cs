@@ -31,6 +31,72 @@ namespace SQLMonitoring.Controllers
         }
 
         [HttpPost]
+        public void UploadTop5ActiveTransactions(string Timestamp, string Server, string TransactionId, string Name, string BeginTime, string DurationMin, string State)
+        {
+            BlockingAndDeadlocks stats = new BlockingAndDeadlocks();
+
+            stats.Type = BlockingAndDeadlockType.LongActiveTransactions;
+            stats.ServerName = Server;
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.TransactionId = long.Parse(TransactionId);
+            stats.Name = Name;
+            stats.BeginTime = DateTime.Parse(BeginTime);
+            stats.DurationMin = long.Parse(DurationMin);
+            stats.State = State;
+
+            _db.GlobalBlockingStats.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
+        public void UploadBlockingSessions(string Timestamp, string Server, string ProcessId, string Blocked, string Status, string WaitTime, string WaitResource, string DatabaseId)
+        {
+            BlockingAndDeadlocks stats = new BlockingAndDeadlocks();
+
+            stats.Type = BlockingAndDeadlockType.DeadlocksInfo;
+            stats.ServerName = Server;
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.ProcessId = int.Parse(ProcessId);
+            stats.Blocked = int.Parse(Status);
+            stats.Status = Status;
+            stats.WaitTime = long.Parse(WaitTime);
+            stats.WaitResource = WaitResource;
+            stats.DatabaseId = int.Parse(DatabaseId);
+
+            _db.GlobalBlockingStats.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
+        public void UploadTotalDeadlocks(string Timestamp, string Server, string TotalDeadlocks)
+        {
+            BlockingAndDeadlocks stats = new BlockingAndDeadlocks();
+
+            stats.Type = BlockingAndDeadlockType.TotalDeadlocks;
+            stats.ServerName = Server;
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.TotalDeadlocks = long.Parse(TotalDeadlocks);
+
+            _db.GlobalBlockingStats.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
         public void UploadThroughput(string Timestamp, string Server, string ReadMBps, string WriteMBps, string TotalMBps)
         {
             IOStats stats = new IOStats();
