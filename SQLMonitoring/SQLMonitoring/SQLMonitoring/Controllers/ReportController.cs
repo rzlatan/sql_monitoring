@@ -31,11 +31,95 @@ namespace SQLMonitoring.Controllers
         }
 
         [HttpPost]
+        public void UploadThroughput(string Timestamp, string Server, string ReadMBps, string WriteMBps, string TotalMBps)
+        {
+            IOStats stats = new IOStats();
+
+            stats.Type = IOStatsType.Throughput;
+            stats.ServerName = Server;
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.ReadMBps =  (long) double.Parse(ReadMBps);
+            stats.WriteMBps = (long)double.Parse(WriteMBps);
+            stats.TotalMBps = (long)double.Parse(TotalMBps);
+
+            _db.GlobalIOStats.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
+        public void UploadIOPS(string Timestamp, string Server, string ReadIOPS, string WriteIOPS, string TotalIOPS)
+        {
+            IOStats stats = new IOStats();
+
+            stats.Type = IOStatsType.IOPS;
+            stats.ServerName = Server;
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.ReadIOPS = (long) double.Parse(ReadIOPS);
+            stats.WriteIOPS = (long) double.Parse(WriteIOPS);
+            stats.TotalIOPS = (long) double.Parse(TotalIOPS);
+
+            _db.GlobalIOStats.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
+        public void UploadLatency(string Timestamp, string Server, string ReadLatency, string WriteLatency)
+        {
+            IOStats stats = new IOStats();
+
+            stats.Type = IOStatsType.Latency;
+            stats.ServerName = Server;
+            
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.ReadLatency = (long) double.Parse(ReadLatency);
+            stats.WriteLatency = (long) double.Parse(WriteLatency);
+
+            _db.GlobalIOStats.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
+        public void UploadTop5IOPlans(string Timestamp, string Server, string PlanId,  string LogicalIOs, string LogicalReads, string LogicalWrites)
+        {
+            IOStats stats = new IOStats();
+            stats.ServerName = Server;
+
+            stats.Type = IOStatsType.TopQueries;
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.TotalIOs = long.Parse(LogicalIOs);
+            stats.TotalReadIOs = (long) double.Parse(LogicalReads);
+            stats.TotalWriteIOs = (long) double.Parse(LogicalWrites);
+
+            _db.GlobalIOStats.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
         public void UploadTotalAndTargetMemory(string Timestamp, string Server, string TotalMemory, string TargetMemory)
         {
             MemoryStats stats = new MemoryStats();
 
             stats.Type = MemoryStatsType.TotalAndTargetMemory;
+            stats.ServerName = Server;
 
             stats.Date = DateTime.ParseExact(
                 Timestamp,
@@ -55,6 +139,7 @@ namespace SQLMonitoring.Controllers
             MemoryStats stats = new MemoryStats();
             
             stats.Type = MemoryStatsType.BufferHitRatioAndPageLifeExpectancy;
+            stats.ServerName = Server;
 
             stats.Date = DateTime.ParseExact(
                 Timestamp,
@@ -74,6 +159,7 @@ namespace SQLMonitoring.Controllers
             MemoryStats stats = new MemoryStats();
 
             stats.Type = MemoryStatsType.MemoryClerkStats;
+            stats.ServerName = Server;
 
             stats.Date = DateTime.ParseExact(
                 Timestamp,
