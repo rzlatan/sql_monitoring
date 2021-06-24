@@ -75,5 +75,60 @@ namespace SQLMonitoring.Collections
             $@"
                 SELECT name, physical_name, database_id, state_desc, type_desc, size, max_size, growth FROM sys.master_files
              ";
+
+        public static string BackupsInLast24h =
+            $@"SELECT 
+                msdb.dbo.backupset.database_name, 
+                msdb.dbo.backupset.backup_start_date, 
+                msdb.dbo.backupset.backup_finish_date, 
+                DATEDIFF(MINUTE, msdb.dbo.backupset.backup_finish_date, msdb.dbo.backupset.backup_start_date) AS backup_duration, 
+                CASE msdb..backupset.type 
+                    WHEN 'D' THEN 'Database' 
+                    WHEN 'L' THEN 'Log' 
+                END AS backup_type, 
+                msdb.dbo.backupset.backup_size, 
+                msdb.dbo.backupmediafamily.physical_device_name
+                FROM msdb.dbo.backupmediafamily 
+                INNER JOIN msdb.dbo.backupset ON msdb.dbo.backupmediafamily.media_set_id = msdb.dbo.backupset.media_set_id 
+                WHERE (CONVERT(datetime, msdb.dbo.backupset.backup_start_date, 102) >= GETDATE() - 1)
+                ORDER BY 
+                msdb.dbo.backupset.database_name, 
+                msdb.dbo.backupset.backup_finish_date 
+            ";
+
+        public static string LastRecoverablePoint =
+            $@"SELECT  
+               msdb.dbo.backupset.database_name,  
+               MAX(msdb.dbo.backupset.backup_finish_date) AS last_db_backup_date 
+              FROM   msdb.dbo.backupmediafamily  
+              INNER JOIN msdb.dbo.backupset ON msdb.dbo.backupmediafamily.media_set_id = msdb.dbo.backupset.media_set_id  
+              WHERE  msdb..backupset.type = 'D' 
+              GROUP BY 
+              msdb.dbo.backupset.database_name  
+              ORDER BY  
+              msdb.dbo.backupset.database_name
+            ";
+
+        public static string DatabasesWithoutBackup =
+            $@"SELECT 
+                msdb.dbo.backupset.database_name, 
+                MAX(msdb.dbo.backupset.backup_finish_date) AS last_db_backup_date, 
+                DATEDIFF(hh, MAX(msdb.dbo.backupset.backup_finish_date), GETDATE()) AS [Backup Age (Hours)] 
+               FROM    msdb.dbo.backupset 
+               WHERE     msdb.dbo.backupset.type = 'D'  
+               GROUP BY msdb.dbo.backupset.database_name 
+               HAVING  (MAX(msdb.dbo.backupset.backup_finish_date) < DATEADD(hh, - 24, GETDATE()))  
+               UNION  
+               --Databases without any backup history 
+                SELECT      
+                    master.dbo.sysdatabases.NAME AS database_name,  
+                    NULL AS [Last Data Backup Date],  
+                    9999 AS [Backup Age (Hours)]  
+                FROM 
+                    master.dbo.sysdatabases LEFT JOIN msdb.dbo.backupset 
+                    ON master.dbo.sysdatabases.name  = msdb.dbo.backupset.database_name 
+                WHERE msdb.dbo.backupset.database_name IS NULL AND master.dbo.sysdatabases.name <> 'tempdb' 
+                ORDER BY  
+                msdb.dbo.backupset.database_name";
     }
 }

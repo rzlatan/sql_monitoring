@@ -109,7 +109,7 @@ namespace SQLMonitoring.Controllers
                 "dd/MM/yyyy HH:mm",
                 CultureInfo.InvariantCulture);
 
-            stats.ReadMBps =  (long) double.Parse(ReadMBps);
+            stats.ReadMBps = (long)double.Parse(ReadMBps);
             stats.WriteMBps = (long)double.Parse(WriteMBps);
             stats.TotalMBps = (long)double.Parse(TotalMBps);
 
@@ -130,9 +130,9 @@ namespace SQLMonitoring.Controllers
                 "dd/MM/yyyy HH:mm",
                 CultureInfo.InvariantCulture);
 
-            stats.ReadIOPS = (long) double.Parse(ReadIOPS);
-            stats.WriteIOPS = (long) double.Parse(WriteIOPS);
-            stats.TotalIOPS = (long) double.Parse(TotalIOPS);
+            stats.ReadIOPS = (long)double.Parse(ReadIOPS);
+            stats.WriteIOPS = (long)double.Parse(WriteIOPS);
+            stats.TotalIOPS = (long)double.Parse(TotalIOPS);
 
             _db.GlobalIOStats.Add(stats);
             _db.SaveChanges();
@@ -145,21 +145,21 @@ namespace SQLMonitoring.Controllers
 
             stats.Type = IOStatsType.Latency;
             stats.ServerName = Server;
-            
+
             stats.Date = DateTime.ParseExact(
                 Timestamp,
                 "dd/MM/yyyy HH:mm",
                 CultureInfo.InvariantCulture);
 
-            stats.ReadLatency = (long) double.Parse(ReadLatency);
-            stats.WriteLatency = (long) double.Parse(WriteLatency);
+            stats.ReadLatency = (long)double.Parse(ReadLatency);
+            stats.WriteLatency = (long)double.Parse(WriteLatency);
 
             _db.GlobalIOStats.Add(stats);
             _db.SaveChanges();
         }
 
         [HttpPost]
-        public void UploadTop5IOPlans(string Timestamp, string Server, string PlanId,  string LogicalIOs, string LogicalReads, string LogicalWrites)
+        public void UploadTop5IOPlans(string Timestamp, string Server, string PlanId, string LogicalIOs, string LogicalReads, string LogicalWrites)
         {
             IOStats stats = new IOStats();
             stats.ServerName = Server;
@@ -172,8 +172,8 @@ namespace SQLMonitoring.Controllers
                 CultureInfo.InvariantCulture);
 
             stats.TotalIOs = long.Parse(LogicalIOs);
-            stats.TotalReadIOs = (long) double.Parse(LogicalReads);
-            stats.TotalWriteIOs = (long) double.Parse(LogicalWrites);
+            stats.TotalReadIOs = (long)double.Parse(LogicalReads);
+            stats.TotalWriteIOs = (long)double.Parse(LogicalWrites);
 
             _db.GlobalIOStats.Add(stats);
             _db.SaveChanges();
@@ -203,7 +203,7 @@ namespace SQLMonitoring.Controllers
         public void UploadBufferHitRatioAndPageLifeExpectancy(string Timestamp, string Server, string BufferCacheHitRatio, string PageLifeExpectancy)
         {
             MemoryStats stats = new MemoryStats();
-            
+
             stats.Type = MemoryStatsType.BufferHitRatioAndPageLifeExpectancy;
             stats.ServerName = Server;
 
@@ -372,14 +372,125 @@ namespace SQLMonitoring.Controllers
                 CultureInfo.InvariantCulture);
 
             stats.ServerName = Server;
-            stats.CPUTotalTime = (long) double.Parse(TotalCpu);
-            stats.CPUUserTime = (long) double.Parse(UserCpu);
+            stats.CPUTotalTime = (long)double.Parse(TotalCpu);
+            stats.CPUUserTime = (long)double.Parse(UserCpu);
 
             _db.GlobalCPUStats.Add(stats);
             _db.SaveChanges();
         }
 
         [HttpGet]
+        public void GenerateBackupInformation(string serverName)
+        {
+            byte[] userIdByteArray;
+            HttpContext.Session.TryGetValue("Id", out userIdByteArray);
+            int userId = BitConverter.ToInt32(userIdByteArray);
+
+            var server = _db.Servers.Where(srv => srv.ServerName == serverName).FirstOrDefault();
+            var connectionStringTemplate = _configuration.GetValue<string>("Templates:ServerConnectionString");
+
+            DateTime date = DateTime.Now;
+
+            SqlConnection connection = null;
+            SqlCommand cmd = null;
+            SqlDataReader dataReader = null;
+
+            try
+            {
+                var connectionString = string.Format(
+                    connectionStringTemplate,
+                    server.ServerName,
+                    "master",
+                    server.UserName,
+                    CryptographyService.DecryptString(server.Password));
+
+                connection = new SqlConnection(connectionString);
+                connection.Open();
+
+                // Backup information for last 24h
+                //
+                cmd = new SqlCommand(QueryCollection.BackupsInLast24h, connection);
+
+                dataReader = cmd.ExecuteReader();
+                while (dataReader.Read())
+                {
+                    BackupInformation backupInformation = new BackupInformation();
+                    backupInformation.Type = BackupInformationType.LastBackups;
+                    backupInformation.ServerName = server.ServerName;
+                    backupInformation.Date = date;
+
+                    backupInformation.DatabaseName = (string)dataReader.GetValue(0);
+                    backupInformation.BackupStartTime = (DateTime)dataReader.GetValue(1);
+                    backupInformation.BackupEndTime = (DateTime)dataReader.GetValue(2);
+                    backupInformation.BackupDuration = Convert.ToInt64(dataReader.GetValue(3));
+                    backupInformation.BackupType = (string)dataReader.GetValue(4);
+                    backupInformation.BackupSize = Convert.ToInt64(dataReader.GetValue(5));
+                    backupInformation.BackupLocation = (string)dataReader.GetValue(6);
+
+                    _db.GlobalBackupStats.Add(backupInformation);
+                    _db.SaveChanges();
+                }
+                dataReader.Close();
+
+                // Last Restorable points in time
+                //
+                cmd = new SqlCommand(QueryCollection.LastRecoverablePoint, connection);
+
+                dataReader = cmd.ExecuteReader();
+                while (dataReader.Read())
+                {
+                    BackupInformation backupInformation = new BackupInformation();
+                    backupInformation.Type = BackupInformationType.LastRestorablePoint;
+                    backupInformation.ServerName = server.ServerName;
+                    backupInformation.Date = date;
+
+                    backupInformation.DatabaseName = (string)dataReader.GetValue(0);
+                    backupInformation.LastRestorablePoint = (DateTime)dataReader.GetValue(1);
+
+                    _db.GlobalBackupStats.Add(backupInformation);
+                    _db.SaveChanges();
+                }
+                dataReader.Close();
+
+                // Databases Without Backup
+                //
+                cmd = new SqlCommand(QueryCollection.DatabasesWithoutBackup, connection);
+
+                dataReader = cmd.ExecuteReader();
+                while (dataReader.Read())
+                {
+                    BackupInformation backupInformation = new BackupInformation();
+                    backupInformation.Type = BackupInformationType.DatabasesWithoutBackup;
+                    backupInformation.ServerName = server.ServerName;
+                    backupInformation.Date = date;
+
+                    backupInformation.DatabaseName = (string)dataReader.GetValue(0);
+                    backupInformation.HoursSinceLastBackup = Convert.ToInt64(dataReader.GetValue(2));
+
+                    _db.GlobalBackupStats.Add(backupInformation);
+                    _db.SaveChanges();
+                }
+                dataReader.Close();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    connection.Close();
+                }
+
+                if (dataReader != null)
+                {
+                    dataReader.Close();
+                }
+            }
+        }
+
+                [HttpGet]
         public void GenerateBasicInformation(string serverName)
         {
             byte[] userIdByteArray;
