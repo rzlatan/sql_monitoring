@@ -130,5 +130,16 @@ namespace SQLMonitoring.Collections
                 WHERE msdb.dbo.backupset.database_name IS NULL AND master.dbo.sysdatabases.name <> 'tempdb' 
                 ORDER BY  
                 msdb.dbo.backupset.database_name";
+        
+        public static string TempdbFileLayout =
+            $@"SELECT 
+                file_id AS FileId,
+                name as Name,
+                physical_name as Location,
+                type_desc as Type, size as Size,
+                max_size as MaxSize,
+                growth as Growth 
+              FROM sys.master_files 
+              WHERE database_id = 2";
     }
 }

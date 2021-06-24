@@ -281,6 +281,27 @@ namespace SQLMonitoring.Controllers
         }
 
         [HttpPost]
+        public void UploadTempdbDataAndLogSize(string Timestamp, string Server, string DataSize, string LogSize)
+        {
+            TempdbStats stats = new Model.TempdbStats();
+
+            stats.Type = TempdbStatsType.TempdbSizeThroughTime;
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.ServerName = Server;
+            stats.DataSizeMb = int.Parse(DataSize);
+            stats.LogSizeMb = int.Parse(LogSize);
+
+            _db.GlobalTempdbStats.Add(stats);
+            _db.SaveChanges();
+        }
+
+
+        [HttpPost]
         public void GlobalSpinlockStats(string Timestamp, string Server, string Spinlock, string Collisions, string Backoffs)
         {
             GlobalSpinlockStats stats = new Model.GlobalSpinlockStats();
@@ -377,6 +398,75 @@ namespace SQLMonitoring.Controllers
 
             _db.GlobalCPUStats.Add(stats);
             _db.SaveChanges();
+        }
+
+        [HttpGet]
+        public void GenerateTempdbFileLayout(string serverName)
+        {
+            byte[] userIdByteArray;
+            HttpContext.Session.TryGetValue("Id", out userIdByteArray);
+            int userId = BitConverter.ToInt32(userIdByteArray);
+
+            var server = _db.Servers.Where(srv => srv.ServerName == serverName).FirstOrDefault();
+            var connectionStringTemplate = _configuration.GetValue<string>("Templates:ServerConnectionString");
+
+            DateTime date = DateTime.Now;
+
+            SqlConnection connection = null;
+            SqlCommand cmd = null;
+            SqlDataReader dataReader = null;
+
+            try
+            {
+                var connectionString = string.Format(
+                    connectionStringTemplate,
+                    server.ServerName,
+                    "master",
+                    server.UserName,
+                    CryptographyService.DecryptString(server.Password));
+
+                connection = new SqlConnection(connectionString);
+                connection.Open();
+
+                cmd = new SqlCommand(QueryCollection.TempdbFileLayout, connection);
+
+                dataReader = cmd.ExecuteReader();
+                while (dataReader.Read())
+                {
+                    TempdbStats tempdbInformation = new TempdbStats();
+                    tempdbInformation.Type = TempdbStatsType.FileLayout;
+                    tempdbInformation.ServerName = server.ServerName;
+                    tempdbInformation.Date = date;
+
+                    tempdbInformation.FileId = (int)dataReader.GetValue(0);
+                    tempdbInformation.FileName = (string)dataReader.GetValue(1);
+                    tempdbInformation.Location = (string)dataReader.GetValue(2);
+                    tempdbInformation.FileType = (string)dataReader.GetValue(3);
+                    tempdbInformation.FileSize = Convert.ToInt32(dataReader.GetValue(4));
+                    tempdbInformation.FileMaxSize = Convert.ToInt32(dataReader.GetValue(5));
+                    tempdbInformation.Growth = Convert.ToInt32(dataReader.GetValue(6));
+
+                    _db.GlobalTempdbStats.Add(tempdbInformation);
+                    _db.SaveChanges();
+                }
+                dataReader.Close();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    connection.Close();
+                }
+
+                if (dataReader != null)
+                {
+                    dataReader.Close();
+                }
+            }
         }
 
         [HttpGet]

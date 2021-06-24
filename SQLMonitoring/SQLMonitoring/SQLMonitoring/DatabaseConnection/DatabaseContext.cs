@@ -28,5 +28,6 @@ namespace SQLMonitoring.DatabaseConnection
         public DbSet<IOStats> GlobalIOStats { get; set; }
         public DbSet<BlockingAndDeadlocks> GlobalBlockingStats { get; set; }
         public DbSet<BackupInformation> GlobalBackupStats { get; set; }
+        public DbSet<TempdbStats> GlobalTempdbStats { get; set; }
     }
 }
