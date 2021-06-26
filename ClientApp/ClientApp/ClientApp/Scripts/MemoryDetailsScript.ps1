@@ -1,6 +1,4 @@
-# Manual steps required for configuring the script:
-# Step 1: Enter the server name
-$ServerName = Read-Host "Enter the server name"
+$ServerName=$args[0]
 
 # Infinite loop for collecting statistics
 # and uploading them to the server for analysis
@@ -53,7 +51,7 @@ while ($true)
 
     #####################################################################################
     # Top 5 memory clerks 
-     $Top5MemoryClerks = Invoke-SqlCmd -ServerInstance $ServerName -Query "SELECT TOP 5 CONVERT(nvarchar(20),[type], 1) as [ClerkType], SUM(pages_kb) / 1024 AS [SizeMb] FROM sys.dm_os_memory_clerks GROUP by [type] ORDER BY [SizeMb] DESC"
+     $Top5MemoryClerks = Invoke-SqlCmd -ServerInstance $ServerName -Query "SELECT TOP 5 [type] as [ClerkType], SUM(pages_kb) / 1024 AS [SizeMb] FROM sys.dm_os_memory_clerks GROUP by [type] ORDER BY [SizeMb] DESC"
 	
     foreach ($Clerk in $Top5MemoryClerks)
     {

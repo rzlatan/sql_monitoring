@@ -1,6 +1,4 @@
-# Manual steps required for configuring the script:
-# Step 1: Enter the server name
-$ServerName = Read-Host "Enter the server name"
+$ServerName=$args[0]
 
 # Infinite loop for collecting statistics
 # and uploading them to the server for analysis
@@ -61,6 +59,7 @@ while ($true)
         BatchRequests = $BatchRequests
 	}
 
+	Write-Host "Current stats: $Body.Timestamp, $Body.Server, $Body.Cpu, $Body.Memory, $Body.Network, $Body.Disk, $Body.Connections, $Body.BatchRequests" 
 	Invoke-RestMethod -Method "Post" -Uri $Url -Body $Body
 	
 	Write-Host "Sleeping for one minute"

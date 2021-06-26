@@ -290,7 +290,7 @@ namespace SQLMonitoring.Controllers
             stats.Type = MemoryStatsType.BufferHitRatioAndPageLifeExpectancy;
             stats.ServerName = Server;
 
-            stats.Date = DateTime.ParseExact(
+            stats.Date = DateTime.ParseExact( 
                 Timestamp,
                 "dd/MM/yyyy HH:mm",
                 CultureInfo.InvariantCulture);

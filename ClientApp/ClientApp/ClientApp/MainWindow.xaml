@@ -1,0 +1,33 @@
+﻿<Window x:Class="ClientApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ClientApp"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid Margin="0,0,2,0">
+        <TextBlock x:Name="textBlock" HorizontalAlignment="Left" Margin="310,10,0,0" TextWrapping="Wrap" Text="SQL Monitoring" FontSize="22"  FontWeight="Bold" VerticalAlignment="Top" Height="79" Width="371"/>
+        <TextBox x:Name="ServerName" HorizontalAlignment="Left" Height="28" Margin="49,75,0,0" TextWrapping="Wrap" Text="Sever Name" FontSize="14" VerticalAlignment="Top" Width="132" TextChanged="textBox_TextChanged"/>
+        <TextBox x:Name="Password" HorizontalAlignment="Left" Height="28" Margin="200,75,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="408" TextChanged="textBox1_TextChanged"/>
+        <CheckBox x:Name="BasicInformation" Content="Basic Information&#xD;&#xA;" HorizontalAlignment="Left" Margin="49,195,0,0" VerticalAlignment="Top" Height="14" Width="120" Checked="BasicInformation_Checked"/>
+        <CheckBox x:Name="BasicResourceUsage" Content="Basic Resource Usage&#xD;&#xA;" HorizontalAlignment="Left" Margin="49,214,0,0" VerticalAlignment="Top" Height="21" Width="132" Checked="BasicResourceUsage_Checked"/>
+        <CheckBox x:Name="CpuDetails" Content="CPU Details&#xD;&#xA;" HorizontalAlignment="Left" Margin="49,235,0,0" VerticalAlignment="Top" Height="19" Width="87" Checked="checkBox_Copy1_Checked"/>
+        <CheckBox x:Name="MemoryDetails" Content="Memory Details&#xD;&#xA;" HorizontalAlignment="Left" Margin="49,254,0,0" VerticalAlignment="Top" Height="23" Checked="MemoryDetails_Checked"/>
+        <CheckBox x:Name="IODetails" Content="IO Details&#xD;&#xA;" HorizontalAlignment="Left" Margin="49,275,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.563,2.742" Height="18" Width="87" Checked="IODetails_Checked"/>
+        <CheckBox x:Name="checkBox_Copy4" Content="Wait Statistics&#xD;&#xA;" HorizontalAlignment="Left" Margin="266,287,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.648,3.6" Checked="checkBox_Copy4_Checked"/>
+        <CheckBox x:Name="checkBox_Copy5" Content="Blocking and Deadlocks&#xD;&#xA;" HorizontalAlignment="Left" Margin="266,263,0,0" VerticalAlignment="Top" Height="19" Width="147" Checked="checkBox_Copy5_Checked"/>
+        <TextBox x:Name="textBox2" HorizontalAlignment="Left" Height="23" Margin="49,154,0,0" TextWrapping="Wrap" Text="Choose the SQL Server areas you would like to include on the report" VerticalAlignment="Top" Width="559"/>
+        <CheckBox x:Name="checkBox_Copy6" Content="TempDB Statistics&#xD;&#xA;&#xA;" HorizontalAlignment="Left" Margin="266,195,0,0" VerticalAlignment="Top" Height="21" Checked="checkBox_Copy6_Checked"/>
+        <CheckBox x:Name="checkBox_Copy7" Content="Query Statistics&#xD;&#xA;&#xA;" HorizontalAlignment="Left" Margin="266,216,0,0" VerticalAlignment="Top" Height="19" Width="102" Checked="checkBox_Copy7_Checked"/>
+        <CheckBox x:Name="checkBox_Copy8" Content="Common Problems&#xD;&#xA;&#xA;" HorizontalAlignment="Left" Margin="266,240,0,0" VerticalAlignment="Top" Height="18" Width="123" Checked="checkBox_Copy8_Checked"/>
+        <Button x:Name="button" Content="Configure" HorizontalAlignment="Left" Margin="55,348,0,0" VerticalAlignment="Top" Width="97" Height="28" Click="button_Click"/>
+        <Image x:Name="image" HorizontalAlignment="Left" Height="100" VerticalAlignment="Top" Width="100" Margin="530,263,0,0"/>
+        <Image x:Name="Image1_png" Margin="487,182,160,90" Source="Image1.png" Stretch="Fill"/>
+        <Image x:Name="Image2_png" Margin="611,172,25,69" Source="Image2.png" Stretch="Fill"/>
+        <CheckBox x:Name="checkBox_Copy9" Content="Backup Details&#xD;&#xA;&#xA;" HorizontalAlignment="Left" Margin="49,293,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.563,2.742" Height="18" Width="87" Checked="checkBox_Copy9_Checked"/>
+        <TextBox x:Name="textBox_Copy" HorizontalAlignment="Left" Height="28" Margin="49,108,0,0" TextWrapping="Wrap" Text="Password" FontSize="14" VerticalAlignment="Top" Width="132" TextChanged="textBox_TextChanged"/>
+        <PasswordBox x:Name="passwordBox" HorizontalAlignment="Left" Margin="200,108,0,0" VerticalAlignment="Top" Height="28" Width="408"/>
+
+    </Grid>
+</Window>

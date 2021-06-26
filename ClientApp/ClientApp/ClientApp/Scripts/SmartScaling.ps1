@@ -1,6 +1,4 @@
-# Manual steps required for configuring the script:
-# Step 1: Enter the server name
-$ServerName = Read-Host "Enter the server name"
+$ServerName=$args[0]
 
 # Infinite loop for collecting statistics
 # and uploading them to the server for analysis
@@ -37,19 +35,13 @@ while ($true)
 	$NetworkUsage = $TotalBandwidth / $Count
 	
 	####################################################################################
-	# User Connections
-	$UserConnectionsSample = Get-Counter -Counter "\SQLServer:General Statistics\User Connections"
-    $UserConnections = $UserConnectionsSample.CounterSamples.CookedValue
-
-    ####################################################################################
-    # Batch Requests
-    $BatchRequestsSample = Get-Counter -Counter "\SQLServer:SQL Statistics\Batch Requests/sec"
-    $BatchRequests = $BatchRequestsSample.CounterSamples.CookedValue
-
-    ####################################################################################
+	# Disk latencies
+	$DiskLatencyCounterSample = Get-Counter -Counter "\PhysicalDisk(_Total)\% Disk Time"
+	$DiskLatencies = $DiskLatencyCounterSample.CounterSamples.CookedValue
+	
 	#Upload data on the server 
 	$Timestamp = Get-Date -Format "dd/MM/yyyy HH:mm"
-	$Url = "https://localhost:44347/Report/UploadBasicResourceUsage"
+	$Url = "https://localhost:44347/SmartScaling/UploadStats"
 	$Body = @{
 		Timestamp = $Timestamp
 		Server = $ServerName
@@ -57,10 +49,9 @@ while ($true)
 		Memory = $MemoryUsage
 		Network = $NetworkUsage
 		Disk = $DiskLatencies
-        Connections = $UserConnections
-        BatchRequests = $BatchRequests
 	}
-
+		
+	Write-Host "Current stats: $Body" 
 	Invoke-RestMethod -Method "Post" -Uri $Url -Body $Body
 	
 	Write-Host "Sleeping for one minute"
