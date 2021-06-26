@@ -10,6 +10,7 @@ namespace SQLMonitoring.Model
         public long Id { get; set; }
 
         public DateTime CreationTime { get; set; }
+
         public User User { get; set; }
 
         public Server Server { get; set; }

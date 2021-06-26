@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace SQLMonitoring.Controllers
 {
@@ -906,6 +907,37 @@ namespace SQLMonitoring.Controllers
                     dataReader.Close();
                 }
             }
+        }
+
+        [HttpGet]
+        public IActionResult Home()
+        {
+            byte[] userIdByteArray;
+            HttpContext.Session.TryGetValue("Id", out userIdByteArray);
+            int userId = BitConverter.ToInt32(userIdByteArray);
+
+            var Reports = _db.Reports.Where(report => report.User.Id == userId).Include(r => r.Server).Include(r => r.User).OrderByDescending(report => report.CreationTime).Take(5);
+
+            return View(Reports);
+        }
+
+        [HttpPost]
+        public IActionResult Generate(string ServerName, DateTime StartTime, DateTime EndTime)
+        {
+            ViewBag.ErrorMessage = string.Empty;
+            byte[] userIdByteArray;
+            HttpContext.Session.TryGetValue("Id", out userIdByteArray);
+            int userId = BitConverter.ToInt32(userIdByteArray);
+
+            var Reports = _db.Reports.Where(report => report.User.Id == userId).Include(r => r.Server).Include(r => r.User).OrderByDescending(report => report.CreationTime).Take(5);
+
+            if (StartTime >= EndTime)
+            {
+                ViewBag.ErrorMessage = "Start Time cannot be greater than End Time";
+                return View("Home", Reports);
+            }
+
+            return View("Home", Reports);
         }
     }
 }
