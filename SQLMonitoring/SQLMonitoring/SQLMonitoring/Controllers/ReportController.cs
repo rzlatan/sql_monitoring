@@ -31,6 +31,89 @@ namespace SQLMonitoring.Controllers
         }
 
         [HttpPost]
+        public void UploadLogFullProblem(string Timestamp, string Server, string DbName, string FileName, string CurrentSizeMb, string Growth, string FreeSpaceMb)
+        {
+            CommonProblems stats = new CommonProblems();
+            stats.Type = CommonProblemType.LogFull;
+            stats.ServerName = Server;
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.DbName = DbName;
+            stats.FileName = FileName;
+            stats.CurrentSizeMb = double.Parse(CurrentSizeMb);
+            stats.Growth = int.Parse(Growth);
+            stats.FreeSpaceMb = double.Parse(FreeSpaceMb);
+
+            _db.GlobalCommonProblems.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
+        public void UploadMissingBackupProblem(string Timestamp, string Server, string DatabaseName, string HoursSinceLastBackup)
+        {
+            CommonProblems stats = new CommonProblems();
+            stats.Type = CommonProblemType.MissingBackup;
+            stats.ServerName = Server;
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.DbName = DatabaseName;
+            stats.HoursSinceLastBackup = long.Parse(HoursSinceLastBackup);
+
+            _db.GlobalCommonProblems.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
+        public void UploadLongTransactionProblem(string Timestamp, string Server, string TransactionId, string Name, string BeginTime, string Duration, string State)
+        {
+            CommonProblems stats = new CommonProblems();
+            stats.Type = CommonProblemType.LongTransaction;
+            stats.ServerName = Server;
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.TransactionId = int.Parse(TransactionId);
+            stats.TransactionName = Name;
+            stats.BeginTime = DateTime.Parse(BeginTime);
+            stats.Duration = long.Parse(Duration);
+            stats.State = State;
+
+            _db.GlobalCommonProblems.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
+        public void UploadMissingIndexes(string Timestamp, string Server, string DatabaseId, string EqualityColumns, string InequalityColumns)
+        {
+            CommonProblems stats = new CommonProblems();
+            stats.Type = CommonProblemType.MissingIndexes;
+            stats.ServerName = Server;
+
+            stats.Date = DateTime.ParseExact(
+                Timestamp,
+                "dd/MM/yyyy HH:mm",
+                CultureInfo.InvariantCulture);
+
+            stats.DatabaseId = long.Parse(DatabaseId);
+            stats.EqualityColumns = EqualityColumns;
+            stats.InequalityColumns = InequalityColumns;
+
+            _db.GlobalCommonProblems.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
         public void UploadTop5ActiveTransactions(string Timestamp, string Server, string TransactionId, string Name, string BeginTime, string DurationMin, string State)
         {
             BlockingAndDeadlocks stats = new BlockingAndDeadlocks();
@@ -381,6 +464,55 @@ namespace SQLMonitoring.Controllers
         }
 
         [HttpPost]
+        public void UploadTop5QueriesByCpuConsumption(string Timestamp, string Server, string QueryHash, string LastExecTime, string TotalWorkerTime, string AvgCpuTime, string ExecCount)
+        {
+            QueriesStats stats = new QueriesStats();
+
+            stats.Type = QueriesStatsType.TopQueriesByCpu;
+
+            stats.Date = DateTime.ParseExact(
+               Timestamp,
+               "dd/MM/yyyy HH:mm",
+               CultureInfo.InvariantCulture);
+
+            stats.ServerName = Server;
+
+            stats.QueryHash = QueryHash;
+            stats.LastExecTime = DateTime.Parse(LastExecTime);
+            stats.TotalWorkerTime = (long) double.Parse(TotalWorkerTime);
+            stats.AvgCpuTime = double.Parse(AvgCpuTime);
+            stats.ExecCount = long.Parse(ExecCount);
+
+            _db.GlobalQueryStats.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
+        public void UploadTop5QueriesByIOConsumption(string Timestamp, string Server, string QueryHash, string LastExecTime, string TotalLogicalReads, string TotalLogicalWrites, string ExecCount, string IOsPerExecution)
+        {
+            QueriesStats stats = new QueriesStats();
+
+            stats.Type = QueriesStatsType.TopQueriesByIO;
+
+            stats.Date = DateTime.ParseExact(
+               Timestamp,
+               "dd/MM/yyyy HH:mm",
+               CultureInfo.InvariantCulture);
+
+            stats.ServerName = Server;
+
+            stats.QueryHash = QueryHash;
+            stats.LastExecTime = DateTime.Parse(LastExecTime);
+            stats.TotalLogicalReads = long.Parse(TotalLogicalReads);
+            stats.TotalLogicalWrites = long.Parse(TotalLogicalWrites);
+            stats.ExecCount = long.Parse(ExecCount);
+            stats.AvgIOsPerExecution = double.Parse(IOsPerExecution);
+
+            _db.GlobalQueryStats.Add(stats);
+            _db.SaveChanges();
+        }
+
+        [HttpPost]
         public void UploadCpuTotalAndUserTime(string Timestamp, string Server, string TotalCpu, string UserCpu)
         {
             CPUStats stats = new Model.CPUStats();
@@ -580,7 +712,7 @@ namespace SQLMonitoring.Controllers
             }
         }
 
-                [HttpGet]
+        [HttpGet]
         public void GenerateBasicInformation(string serverName)
         {
             byte[] userIdByteArray;

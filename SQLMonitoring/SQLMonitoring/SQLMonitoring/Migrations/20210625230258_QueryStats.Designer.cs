@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SQLMonitoring.DatabaseConnection;
 
 namespace SQLMonitoring.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20210625230258_QueryStats")]
+    partial class QueryStats
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -248,69 +250,6 @@ namespace SQLMonitoring.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("GlobalCPUStats");
-                });
-
-            modelBuilder.Entity("SQLMonitoring.Model.CommonProblems", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<DateTime?>("BeginTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<double?>("CurrentSizeMb")
-                        .HasColumnType("float");
-
-                    b.Property<long?>("DatabaseId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("DbName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<long?>("Duration")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("EqualityColumns")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FileName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<double?>("FreeSpaceMb")
-                        .HasColumnType("float");
-
-                    b.Property<int?>("Growth")
-                        .HasColumnType("int");
-
-                    b.Property<long?>("HoursSinceLastBackup")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("InequalityColumns")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ServerName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("State")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("TransactionId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TransactionName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("GlobalCommonProblems");
                 });
 
             modelBuilder.Entity("SQLMonitoring.Model.Database", b =>
