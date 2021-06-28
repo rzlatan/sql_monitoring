@@ -25,7 +25,7 @@
     <a asp-area="" asp-controller="Home" asp-action="Logout" class="list-group-item"><i class="fa fa-sign-out"></i> <span>&nbsp;&nbsp;&nbsp;Sign Out</span></a>
 </div>
 
-<div class="container" style="position:absolute;top:30px;left:550px;">
+<div class="container" style="position:absolute;top:30px;left:450px;">
     <div class="row" style="margin-top:10%">
         <div class="col-md-4 col-md-offset-4">
             <p style="color:lightseagreen">@ViewBag.Message</p>
@@ -94,7 +94,7 @@
                                 @Html.DisplayFor(modelItem => item.ResultPath)
                             </td>
                             <td style="margin-right:10px;">
-                                <a asp-action="View" asp-route-id="@item.Id">View Report</a> |
+                                <a asp-action="View" asp-route-id="@item.Id">View Report</a>
                             </td>
                         </tr>
                     }

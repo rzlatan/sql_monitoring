@@ -16,5 +16,7 @@ namespace SQLMonitoring.Model
         public Server Server { get; set; }
 
         public string ResultPath { get; set; }
+
+        public Guid? ReportGuid { get; set; }
     }
 }

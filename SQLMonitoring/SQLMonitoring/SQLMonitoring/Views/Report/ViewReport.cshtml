@@ -1,0 +1,172 @@
+﻿@model SQLMonitoring.Model.Report
+
+@{
+    ViewData["Title"] = "Report";
+}
+
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<!------ Include the above in your HEAD tag ---------->-
+
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+<link href="~/css/site.css" rel="stylesheet" />
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#footer_id').empty()
+
+        // Register tab functions
+        //
+        $('#basic_info_href').on('click', function () {
+            generateBasicInformation();
+        });
+
+        generateBasicInformation();
+    });
+
+    function generateBasicInformation() {
+        var targetUrl = '@Url.Action("GetBasicInformationData", "Report")?reportId=' + @Model.Id;
+
+        $.ajax({
+            type: "GET",
+            url: targetUrl,
+            contentType: "application/json",
+            success: function (basicInfo) {
+                document.getElementById("content").style.visibility = "hidden"
+                document.getElementById("content").innerHTML = ""
+                data = JSON.parse(basicInfo);
+                serverInfoHTML = populateServerInfo(data);
+                databaseList = populateDatabaseList(data);
+                fileList = populateFileList(data);
+                var innerDataHtml = serverInfoHTML + databaseList + fileList
+                document.getElementById("content").innerHTML = innerDataHtml
+                document.getElementById("content").style.visibility = "visible"
+            },
+
+            error: function (e) {
+                alert("Failed to retrieve data for report");
+            }
+        });
+    }
+
+    function populateServerInfo(basicInfo) {
+        result = "<div class='container' style='position: absolute; top: 40px; left: 50px; width: 600px;'> <div class='row'>" +
+                    "<div class='panel panel-info'>" +
+                       "<div class='panel-heading'>" +
+                            "<h7>Basic Server Information</h7>" +
+                        "</div>" +
+                        "<table class='table table-striped table-hover'>" +
+                        "<tbody>";
+        result += "<table class='table table-striped'>";
+        result += "<tr><td><b>" + 'Server Name' + "<b/></td><td>" + basicInfo.ServerName + "</td></tr>"
+        result += "<tr><td><b>" + 'Server Version' + "<b/></td><td>" + basicInfo.ServerVersion.substr(0, 63)+ "</td></tr>"
+        result += "<tr><td><b>" + 'Edition' + "<b/></td><td>" + basicInfo.Edition + "</td></tr>"
+        result += "<tr><td><b>" + 'Processor Count' + "<b/></td><td>"  + basicInfo.ProcessorCount + "</td></tr>"
+        result += "<tr><td><b>" + 'Memory' + "<b/></td><td>"  + basicInfo.Memory + "</td></tr>"
+        result += "<tr><td><b>" + 'Worker Count' + "<b/></td><td>"  + basicInfo.WorkerCount + "</td></tr>"
+        result += "<tr><td><b>" + 'Compat Level' + "<b/></td><td>"  + basicInfo.CompatLevel + "</td></tr>"
+        result += "<tr><td><b>" + 'Collation' + "<b/></td><td>"  + basicInfo.Collation + "</td></tr>"
+        result += "<tr><td><b>" + 'HyperThread Ratio' + "<b/></td><td>"  + basicInfo.HyperThreadRatio + "</td></tr>"
+        result += "<tr><td><b>" + 'XTP Enabled' + "<b/></td><td>" + basicInfo.IsXTPEnabled + "</td></tr>"
+        result += "<tr><td><b>" + 'HADR Enabled' + "<b/></td><td>"  + basicInfo.IsHADREnabled + "</td></tr>"
+        result += "</table>";
+        result += "</tbody></table></div></div></div>"
+        return result;
+    }
+
+    function populateDatabaseList(basicInfo) {
+        result = "<div class='container' style='position: absolute; top: 520px; left: 50px; width: 700px;'> <div class='row'>" +
+            "<div class='panel panel-info'>" +
+            "<div class='panel-heading'>" +
+            "<h7>Database List</h7>" +
+            "</div>" +
+            "<table class='table table-striped table-hover'>" +
+            "<tbody>" +
+                "<thead>"+
+                    "<tr>"+
+		                "<th>Name</th>"+
+		                "<th>State</th>"+
+		                "<th>Recovery Model</th>"+
+		                "<th>Snapshot Isolation</th>"+
+		                "<th>Encryption</th>"+
+		                "<th>Size Megabytes</th>"+
+		            "</tr>"+
+		        "</thead>";
+        for (var i = 0; i < basicInfo.Databases.length; i++) {
+            var database = basicInfo.Databases[i];
+            result += "<tr><td>" + database.Name + "</td><td>" + database.State + "</td><td>" + database.RecoveryModel + "</td><td>" + database.SnapshotIsolationLevel + "</td><td>" + database.IsEncrypted + "</td><td>" + database.DatabaseSize + "</td></tr>"
+        }
+        result += "</tbody></table></div></div></div>"
+        return result;
+    }
+
+    function populateFileList(basicInfo) {
+        result = "<div class='container' style='position: absolute; top: 830px; left: 50px; width: 800px;'> <div class='row'>" +
+            "<div class='panel panel-info'>" +
+            "<div class='panel-heading'>" +
+            "<h7>Database List</h7>" +
+            "</div>" +
+            "<table class='table table-striped table-hover'>" +
+            "<tbody>" +
+            "<thead>" +
+            "<tr>" +
+            "<th>Name</th>" +
+            "<th>Database</th>" +
+            "<th>Type</th>"+
+            "<th>Size</th>" +
+            "<th>Max Size</th>" +
+            "<th>Growth</th>" +
+            "<th>State</th>" +
+            "<th>Location</th>"
+            "</tr>" +
+            "</thead>";
+        for (var i = 0; i < basicInfo.DatabaseFiles.length; i++) {
+            var databaseFile = basicInfo.DatabaseFiles[i];
+            result += "<tr><td>" + databaseFile.Name + "</td><td>" + databaseFile.Db.Name + "</td><td>" + databaseFile.Type + "</td><td>" + databaseFile.Size + "</td><td>" + databaseFile.MaxSize + "</td><td>" + databaseFile.AutoGrowth + "</td><td>" + databaseFile.State  + "</td><td>" + databaseFile.Location + "</td></tr>"
+        }
+        result += "</tbody></table></div></div></div>"
+        return result;
+    }
+</script>
+
+
+<div class="panel panel-warning" style="position:absolute;top:100px;left:13%;width:400px;">
+    <div class="panel-heading">
+        <h7 class="panel-title">Report Information</h7>
+    </div>
+    <div class="panel-body">
+        <b> Server Name </b> - @Model.Server.ServerName
+        <br/>
+        <b> Created By </b> - @Model.User.Email
+        <br/>
+        <b> Created At </b> - @Model.CreationTime
+    </div>
+</div>
+
+
+    <div id="navigationbar" style="position:absolute;top:250px;left:200px;width:1500px;">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light" sstyle="background-color:#e0e0e0;background:#e0e0e0;">
+            <div class="collapse navbar-collapse" id="navcol-1">
+                <ul class="nav navbar-nav flex-grow-1 justify-content-between">
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="basic_info_href" href="#">Basic Information</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" href="#">Basic Resource Usage</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" href="#">CPU Details</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" href="#">Memory Details</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" href="#">IO Details</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" href="#">Query Stats</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" href="#">Wait Stats</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" href="#">Blocking and Deadlocks</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" href="#">Backups</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" href="#">TempDB Performance</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" href="#">Common Problems</a></li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+
+    <div id="content" class="overflow-scroll" style="position:absolute;top:300px;left:200px;width:1500px;height:500px;">
+    </div>

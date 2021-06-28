@@ -11,6 +11,9 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace SQLMonitoring.Controllers
 {
@@ -876,7 +879,7 @@ namespace SQLMonitoring.Controllers
                     DatabaseFile file = new DatabaseFile();
                     file.Name = dataReader.GetValue(0).ToString();
                     file.Location = dataReader.GetValue(1).ToString();
-                    file.Db = databaseList.Where(db => db.Id == (int)dataReader.GetValue(2)).FirstOrDefault();
+                    file.Db = databaseList.Where(db => db.DatabaseId == (int)dataReader.GetValue(2)).FirstOrDefault();
                     file.State = dataReader.GetValue(3).ToString();
                     file.Type = dataReader.GetValue(4).ToString();
                     file.Size = Double.Parse(dataReader.GetValue(5).ToString());
@@ -929,6 +932,14 @@ namespace SQLMonitoring.Controllers
             HttpContext.Session.TryGetValue("Id", out userIdByteArray);
             int userId = BitConverter.ToInt32(userIdByteArray);
 
+            Report report = new Report();
+
+            report.User = _db.Users.Where(user => user.Id == userId).FirstOrDefault();
+            report.Server = _db.Servers.Where(server => server.ServerName == ServerName).FirstOrDefault();
+            report.ReportGuid = Guid.NewGuid();
+            report.CreationTime = DateTime.Now;
+            report.ResultPath = $"/https://www.sqlmonitoring.com/reports/{report.ReportGuid}";
+
             var Reports = _db.Reports.Where(report => report.User.Id == userId).Include(r => r.Server).Include(r => r.User).OrderByDescending(report => report.CreationTime).Take(5);
 
             if (StartTime >= EndTime)
@@ -937,7 +948,49 @@ namespace SQLMonitoring.Controllers
                 return View("Home", Reports);
             }
 
+            GenerateBasicInformationReport(report, ServerName, StartTime, EndTime);
+
+            _db.Reports.Add(report);
+            _db.SaveChanges();
+
+            Reports = _db.Reports.Where(report => report.User.Id == userId).Include(r => r.Server).Include(r => r.User).OrderByDescending(report => report.CreationTime).Take(5);
+
             return View("Home", Reports);
+        }
+
+        public void GenerateBasicInformationReport(Report Report, string ServerName, DateTime StartTime, DateTime EndTime)
+        {
+            GenerateBasicInformation(ServerName);
+
+            BasicInformation basicInformation =
+                _db.BasicInformationStats.
+                    Where(bis => bis.ServerName == ServerName).
+                    OrderByDescending(bis => bis.Id).
+                    Include(bis => bis.Databases).
+                    Include(bis => bis.DatabaseFiles).ThenInclude(dbFile => dbFile.Db).
+                    Take(1).
+                    FirstOrDefault();
+
+            Directory.CreateDirectory($"GeneratedReports/{Report.ReportGuid}");
+            System.IO.File.Create($"GeneratedReports/{Report.ReportGuid}/basic_information.json").Close();
+            string jsonData = JsonSerializer.Serialize(basicInformation);
+            System.IO.File.WriteAllText($"GeneratedReports/{Report.ReportGuid}/basic_information.json", jsonData);
+        }
+
+        [HttpGet]
+        public IActionResult View(int Id)
+        {
+            var Report = _db.Reports.Where(report => report.Id == Id).Include(report => report.Server).Include(report => report.User).FirstOrDefault();
+            return View("ViewReport", Report);
+        }
+
+        [HttpGet]
+        public JsonResult GetBasicInformationData(string reportId)
+        {
+            long id = long.Parse(reportId);
+            var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
+            var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/basic_information.json");
+            return new JsonResult(data);
         }
     }
 }
