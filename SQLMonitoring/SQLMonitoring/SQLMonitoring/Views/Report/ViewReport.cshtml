@@ -91,9 +91,7 @@
                 showInLegend: true,
                 color: "#696661",
                 name: spinlocks[i],
-                dataPoints: [
-                    dict[spinlocks[i]]
-                ]
+                dataPoints: dict[spinlocks[i]]
             }
 
             dataList.push(dataObject);
@@ -107,7 +105,7 @@
             },
             axisX: {
                 interval: 1,
-                intervalType: "year"
+                intervalType: "hour"
             },
             axisY: {
                 valueFormatString: "#0",
