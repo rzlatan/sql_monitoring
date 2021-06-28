@@ -148,5 +148,12 @@ namespace SQLMonitoring.Collections
                 WHERE [Server] = '{0}' AND 
                 [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}')
                 GROUP BY Spinlock, DATEPART(DAY,[Date]), DATEPART(HOUR, [Date]), DATEPART(YEAR,[Date]), DATEPART(MONTH, [Date])";
+
+        public static string WaitStatsForPeriod =
+            @"SELECT MAX(WaitTimeMs) AS MaxWaitTimeMs, MIN(WaitTimeMs) AS MinWaitTimeMs, MAX(WaitTimeMs) - MIN(WaitTimeMs) as WaitTimeMs, WaitType, DATEPART(HOUR, [Date]) AS HOUR,  DATEPART(DAY,[Date]) AS DAY, DATEPART(YEAR,[Date]) AS Year, DATEPART(MONTH, [Date]) AS Month
+               FROM dbo.GlobalWaitStats
+               WHERE [ServerName] = '{0}' AND 
+               [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}')
+               GROUP BY WaitType, DATEPART(DAY,[Date]), DATEPART(HOUR, [Date]), DATEPART(YEAR,[Date]), DATEPART(MONTH, [Date])";
     }
 }

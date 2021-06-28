@@ -48,8 +48,9 @@
                 document.getElementById("content").style.visibility = "hidden"
                 document.getElementById("content").innerHTML = ""
                 data = JSON.parse(waitStats);
-                document.getElementById("content").innerHTML = "<div id='spinlock_stats' stlye='position:absolute;top:40px;'></div><div id='wait_stats'></div>"
-                populateSpinlockStats(data);
+                document.getElementById("content").innerHTML = "<div id='spinlock_stats' stlye='margin-top:100px;'></div><div id='wait_stats' style='margin-top:450px'></div>"
+                populateSpinlockStats(data.spinlockList);
+                populateWaitStats(data.waitList);
                 document.getElementById("content").style.visibility = "visible"
             },
 
@@ -59,15 +60,83 @@
         });
     }
 
+    function populateWaitStats(data) {
+        var waits = new Array()
+        var selectedColors = new Array()
+        var dict = {}
+        var colors = ['#6C3483', '#BA4A00', '#2E86C1']
+
+        for (var i = 0; i < data.length; i++) {
+            var dataObj = data[i]
+
+            if (!waits.includes(dataObj.WaitType)) {
+                waits.push(dataObj.WaitType)
+                selectedColors.push(colors[waits.length - 1])
+            }
+
+            if (dict[dataObj.WaitType]) {
+                dict[dataObj.WaitType].push({
+                    y: dataObj.WaitTimeMs,
+                    x: new Date(dataObj.Date)
+                })
+            } else {
+                dict[dataObj.WaitType] = [{
+                    y: dataObj.WaitTimeMs,
+                    x: new Date(dataObj.Date)
+                }]
+            }
+        }
+
+        var dataList = []
+
+        for (var i = 0; i < waits.length; i++) {
+            var dataObject = {
+                type: "stackedColumn",
+                showInLegend: true,
+                color: selectedColors[i],
+                name: waits[i],
+                dataPoints: dict[waits[i]]
+            }
+
+            dataList.push(dataObject);
+        }
+
+        var chart = new CanvasJS.Chart("wait_stats", {
+            animationEnabled: true,
+            title: {
+                text: "Wait Stats",
+                fontColor: "#0E0E0E"
+            },
+            axisX: {
+                interval: 1,
+                intervalType: "hour"
+            },
+            axisY: {
+                valueFormatString: "#0",
+                gridColor: "#B6B1A8",
+                tickColor: "#B6B1A8"
+            },
+            toolTip: {
+                shared: true,
+                content: toolTipContent
+            },
+            data: dataList
+        });
+        chart.render();
+    }
+
     function populateSpinlockStats(data) {
         var spinlocks = new Array()
+        var selectedColors = new Array()
         var dict = {}
+        var colors = ['#F1C40F', '#2ECC71 ','#E74C3C']
 
         for (var i = 0; i < data.length; i++) {
             var dataObj = data[i]
 
             if (!spinlocks.includes(dataObj.Spinlock)) {
                 spinlocks.push(dataObj.Spinlock)
+                selectedColors.push(colors[spinlocks.length - 1])
             }
 
             if (dict[dataObj.Spinlock]) {
@@ -89,7 +158,7 @@
             var dataObject = {
                 type: "stackedColumn",
                 showInLegend: true,
-                color: "#696661",
+                color: selectedColors[i],
                 name: spinlocks[i],
                 dataPoints: dict[spinlocks[i]]
             }
@@ -126,13 +195,13 @@
         var total = 0;
         var str2, str3;
         for (var i = 0; i < e.entries.length; i++) {
-            var str1 = "<span style= \"color:" + e.entries[i].dataSeries.color + "\"> " + e.entries[i].dataSeries.name + "</span>: $<strong>" + e.entries[i].dataPoint.y + "</strong>bn<br/>";
+            var str1 = "<span style= \"color:" + e.entries[i].dataSeries.color + "\"> " + e.entries[i].dataSeries.name + "</span>: <strong>" + e.entries[i].dataPoint.y + "</strong><br/>";
             total = e.entries[i].dataPoint.y + total;
             str = str.concat(str1);
         }
-        str2 = "<span style = \"color:DodgerBlue;\"><strong>" + (e.entries[0].dataPoint.x).getFullYear() + "</strong></span><br/>";
+        str2 = "<span style = \"color:DodgerBlue;\"><strong>" + (e.entries[0].dataPoint.x).getHours() + "</strong></span><br/>";
         total = Math.round(total * 100) / 100;
-        str3 = "<span style = \"color:Tomato\">Total:</span><strong> $" + total + "</strong>bn<br/>";
+        str3 = "<span style = \"color:Tomato\">Total:</span><strong> " + total + "</strong><br/>";
         return (str2.concat(str)).concat(str3);
     }
 

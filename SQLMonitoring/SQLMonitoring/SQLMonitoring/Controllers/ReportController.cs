@@ -1018,11 +1018,33 @@ namespace SQLMonitoring.Controllers
                 }
                 dataReader.Close();
 
-                // add wait stats as well 
+                string waitStatsQueryText = string.Format(QueryCollection.WaitStatsForPeriod, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(waitStatsQueryText, connection);
+                dataReader = cmd.ExecuteReader();
+                List<GlobalWaitStats> waitList = new List<GlobalWaitStats>();
+                while (dataReader.Read())
+                {
+                    GlobalWaitStats globalWaitStats = new GlobalWaitStats();
+                    globalWaitStats.ServerName= ServerName;
+                    globalWaitStats.WaitTimeMs = (long)dataReader.GetValue(2);
+                    globalWaitStats.WaitType = (string)dataReader.GetValue(3);
+
+                    int hour = (int)dataReader.GetValue(4);
+                    int day = (int)dataReader.GetValue(5);
+                    int year = (int)dataReader.GetValue(6);
+                    int month = (int)dataReader.GetValue(7);
+
+                    globalWaitStats.Date = new DateTime(year: year, month: month, day: day, hour: hour, minute: 0, second: 0);
+
+                    waitList.Add(globalWaitStats);
+                }
+                dataReader.Close();
+
+                var jsonObj = new { spinlockList, waitList };
 
                 Directory.CreateDirectory($"GeneratedReports/{Report.ReportGuid}");
                 System.IO.File.Create($"GeneratedReports/{Report.ReportGuid}/stats.json").Close();
-                string jsonData = JsonSerializer.Serialize(spinlockList);
+                string jsonData = JsonSerializer.Serialize(jsonObj);
                 System.IO.File.WriteAllText($"GeneratedReports/{Report.ReportGuid}/wait_stats.json", jsonData);
             }
             catch (Exception ex)
