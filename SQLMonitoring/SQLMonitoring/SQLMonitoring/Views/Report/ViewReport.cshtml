@@ -7,6 +7,7 @@
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 <!------ Include the above in your HEAD tag ---------->-
 
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
@@ -25,8 +26,142 @@
             generateBasicInformation();
         });
 
+        $('#backup_info_href').on('click', function () {
+            generateBackupInformation();
+        });
+
+        $('#wait_stats_href').on('click', function () {
+            generateWaitStats();
+        });
+
         generateBasicInformation();
     });
+
+    function generateWaitStats() {
+        var targetUrl = '@Url.Action("GetWaitStatsData", "Report")?reportId=' + @Model.Id;
+
+        $.ajax({
+            type: "GET",
+            url: targetUrl,
+            contentType: "application/json",
+            success: function (waitStats) {
+                document.getElementById("content").style.visibility = "hidden"
+                document.getElementById("content").innerHTML = ""
+                data = JSON.parse(waitStats);
+                document.getElementById("content").innerHTML = "<div id='spinlock_stats' stlye='position:absolute;top:40px;'></div><div id='wait_stats'></div>"
+                populateSpinlockStats(data);
+                document.getElementById("content").style.visibility = "visible"
+            },
+
+            error: function (e) {
+                alert("Failed to retrieve data for report");
+            }
+        });
+    }
+
+    function populateSpinlockStats(data) {
+        var spinlocks = new Array()
+        var dict = {}
+
+        for (var i = 0; i < data.length; i++) {
+            var dataObj = data[i]
+
+            if (!spinlocks.includes(dataObj.Spinlock)) {
+                spinlocks.push(dataObj.Spinlock)
+            }
+
+            if (dict[dataObj.Spinlock]) {
+                dict[dataObj.Spinlock].push({
+                    y: dataObj.Collisions,
+                    x: new Date(dataObj.Date)
+                })
+            } else {
+                dict[dataObj.Spinlock] = [{
+                    y: dataObj.Collisions,
+                    x: new Date(dataObj.Date)
+                }]
+            }
+        }
+
+        var dataList = []
+
+        for (var i = 0; i < spinlocks.length; i++) {
+            var dataObject = {
+                type: "stackedColumn",
+                showInLegend: true,
+                color: "#696661",
+                name: spinlocks[i],
+                dataPoints: [
+                    dict[spinlocks[i]]
+                ]
+            }
+
+            dataList.push(dataObject);
+        }
+
+        var chart = new CanvasJS.Chart("spinlock_stats", {
+            animationEnabled: true,
+            title: {
+                text: "Spinlock Stats",
+                fontColor: "#0E0E0E"
+            },
+            axisX: {
+                interval: 1,
+                intervalType: "year"
+            },
+            axisY: {
+                valueFormatString: "#0",
+                gridColor: "#B6B1A8",
+                tickColor: "#B6B1A8"
+            },
+            toolTip: {
+                shared: true,
+                content: toolTipContent
+            },
+            data: dataList
+        });
+        chart.render();
+    }
+
+    function toolTipContent(e) {
+        var str = "";
+        var total = 0;
+        var str2, str3;
+        for (var i = 0; i < e.entries.length; i++) {
+            var str1 = "<span style= \"color:" + e.entries[i].dataSeries.color + "\"> " + e.entries[i].dataSeries.name + "</span>: $<strong>" + e.entries[i].dataPoint.y + "</strong>bn<br/>";
+            total = e.entries[i].dataPoint.y + total;
+            str = str.concat(str1);
+        }
+        str2 = "<span style = \"color:DodgerBlue;\"><strong>" + (e.entries[0].dataPoint.x).getFullYear() + "</strong></span><br/>";
+        total = Math.round(total * 100) / 100;
+        str3 = "<span style = \"color:Tomato\">Total:</span><strong> $" + total + "</strong>bn<br/>";
+        return (str2.concat(str)).concat(str3);
+    }
+
+    function generateBackupInformation() {
+        var targetUrl = '@Url.Action("GetBackupInformationData", "Report")?reportId=' + @Model.Id;
+
+        $.ajax({
+            type: "GET",
+            url: targetUrl,
+            contentType: "application/json",
+            success: function (backupInfo) {
+                document.getElementById("content").style.visibility = "hidden"
+                document.getElementById("content").innerHTML = ""
+                data = JSON.parse(backupInfo);
+                lastBackups = populateLastBackups(data);
+                restorablePoints = populateRestorablePoints(data);
+                missingBackups = populateMissingBackups(data);
+                var innerDataHtml = lastBackups + restorablePoints + missingBackups;
+                document.getElementById("content").innerHTML = innerDataHtml
+                document.getElementById("content").style.visibility = "visible"
+            },
+
+            error: function (e) {
+                alert("Failed to retrieve data for report");
+            }
+        });
+    }
 
     function generateBasicInformation() {
         var targetUrl = '@Url.Action("GetBasicInformationData", "Report")?reportId=' + @Model.Id;
@@ -51,6 +186,84 @@
                 alert("Failed to retrieve data for report");
             }
         });
+    }
+
+    function populateLastBackups(backupInfo) {
+        result = "<div class='container' style='position: absolute; top: 40px; left: 50px; width: 1000px;'> <div class='row'>" +
+            "<div class='panel panel-info'>" +
+            "<div class='panel-heading'>" +
+            "<h7>Backups in the last 24 hours</h7>" +
+            "</div>" +
+            "<table class='table table-striped table-hover'>" +
+            "<tbody>" +
+            "<thead>" +
+            "<tr>" +
+            "<th>Database Name</th>" +
+            "<th>Start Time</th>" +
+            "<th>End Time</th>" +
+            "<th>Duration</th>" +
+            "<th>Backup Size</th>" +
+            "<th>Backup Type</th>" +
+            "<th>Backup Location</th>" +
+            "</tr>" +
+            "</thead>";
+        for (var i = 0; i < backupInfo.length; i++) {
+            var backup = backupInfo[i];
+            if (backup.Type == "0") {
+                result += "<tr><td>" + backup.DatabaseName + "</td><td>" + backup.BackupStartTime + "</td><td>" + backup.BackupEndTime + "</td><td>" + backup.BackupDuration + "</td><td>" + backup.BackupSize + "</td><td>" + backup.BackupType + "</td><td>" + backup.BackupLocation + "</td></tr>"
+            }
+        }
+        result += "</tbody></table></div></div></div>"
+        return result;
+    }
+
+    function populateRestorablePoints(backupInfo) {
+        result = "<div class='container' style='position: absolute; top: 300px; left: 50px; width: 500px;'> <div class='row'>" +
+            "<div class='panel panel-info'>" +
+            "<div class='panel-heading'>" +
+            "<h7>Last Restorable Points In Time</h7>" +
+            "</div>" +
+            "<table class='table table-striped table-hover'>" +
+            "<tbody>" +
+            "<thead>" +
+            "<tr>" +
+            "<th>Database Name</th>" +
+            "<th>Last Restorable Point</th>" +
+            "</tr>" +
+            "</thead>";
+        for (var i = 0; i < backupInfo.length; i++) {
+            var backup = backupInfo[i];
+            if (backup.Type == "1") {
+                result += "<tr><td>" + backup.DatabaseName + "</td><td>" + backup.LastRestorablePoint + "</td></tr>"
+            }
+        }
+        result += "</tbody></table></div></div></div>"
+        return result;
+    }
+
+    function populateMissingBackups(backupInfo) {
+        result = "<div class='container' style='position: absolute; top: 520px; left: 50px; width: 500px;'> <div class='row'>" +
+            "<div class='panel panel-info'>" +
+            "<div class='panel-heading'>" +
+            "<h7>Databases Missing Backup During Last 24 Hours</h7>" +
+            "</div>" +
+            "<table class='table table-striped table-hover'>" +
+            "<tbody>" +
+            "<thead>" +
+            "<tr>" +
+            "<th>Database Name</th>" +
+            "<th>Hours Since Last Backup</th>" +
+            "</tr>" +
+            "</thead>";
+        for (var i = 0; i < backupInfo.length; i++) {
+            var backup = backupInfo[i];
+            if (backup.Type == "2") {
+                var hoursSinceLastBackup = backup.HoursSinceLastBackup == "9999" ? " No backups for this database" : backup.HoursSinceLastBackup
+                result += "<tr><td>" + backup.DatabaseName + "</td><td>" + hoursSinceLastBackup + "</td></tr>"
+            }
+        }
+        result += "</tbody></table></div></div></div>"
+        return result;
     }
 
     function populateServerInfo(basicInfo) {
@@ -105,7 +318,7 @@
     }
 
     function populateFileList(basicInfo) {
-        result = "<div class='container' style='position: absolute; top: 830px; left: 50px; width: 800px;'> <div class='row'>" +
+        result = "<div class='container' style='position: absolute; top: 900px; left: 50px; width: 800px;'> <div class='row'>" +
             "<div class='panel panel-info'>" +
             "<div class='panel-heading'>" +
             "<h7>Database List</h7>" +
@@ -158,9 +371,9 @@
                     <li class="nav-item" role="presentation"><a class="nav-link" href="#">Memory Details</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" href="#">IO Details</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" href="#">Query Stats</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" href="#">Wait Stats</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="wait_stats_href" href="#">Wait Stats</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" href="#">Blocking and Deadlocks</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" href="#">Backups</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="backup_info_href" href="#">Backups</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" href="#">TempDB Performance</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" href="#">Common Problems</a></li>
                 </ul>

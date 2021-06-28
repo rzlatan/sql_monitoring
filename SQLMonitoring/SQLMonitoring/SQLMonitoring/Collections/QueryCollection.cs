@@ -141,5 +141,12 @@ namespace SQLMonitoring.Collections
                 growth as Growth 
               FROM sys.master_files 
               WHERE database_id = 2";
+
+        public static string SpinlockStatForPeriod =
+             @"SELECT MAX(Collisions) AS MaxCollisions, MIN(Collisions) AS MinCollisions, MAX(Collisions) - MIN(Collisions) as Collisions, Spinlock, DATEPART(HOUR, [Date]) AS HOUR,  DATEPART(DAY,[Date]) AS DAY, DATEPART(YEAR,[Date]) AS Year, DATEPART(MONTH, [Date]) AS Month
+                FROM dbo.GlobalSpinlockStats
+                WHERE [Server] = '{0}' AND 
+                [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}')
+                GROUP BY Spinlock, DATEPART(DAY,[Date]), DATEPART(HOUR, [Date]), DATEPART(YEAR,[Date]), DATEPART(MONTH, [Date])";
     }
 }

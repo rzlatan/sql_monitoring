@@ -606,11 +606,12 @@ namespace SQLMonitoring.Controllers
         }
 
         [HttpGet]
-        public void GenerateBackupInformation(string serverName)
+        public List<BackupInformation> GenerateBackupInformation(string serverName)
         {
             byte[] userIdByteArray;
             HttpContext.Session.TryGetValue("Id", out userIdByteArray);
             int userId = BitConverter.ToInt32(userIdByteArray);
+            List<BackupInformation> resultList = new List<BackupInformation>();
 
             var server = _db.Servers.Where(srv => srv.ServerName == serverName).FirstOrDefault();
             var connectionStringTemplate = _configuration.GetValue<string>("Templates:ServerConnectionString");
@@ -653,6 +654,7 @@ namespace SQLMonitoring.Controllers
                     backupInformation.BackupSize = Convert.ToInt64(dataReader.GetValue(5));
                     backupInformation.BackupLocation = (string)dataReader.GetValue(6);
 
+                    resultList.Add(backupInformation);
                     _db.GlobalBackupStats.Add(backupInformation);
                     _db.SaveChanges();
                 }
@@ -673,6 +675,7 @@ namespace SQLMonitoring.Controllers
                     backupInformation.DatabaseName = (string)dataReader.GetValue(0);
                     backupInformation.LastRestorablePoint = (DateTime)dataReader.GetValue(1);
 
+                    resultList.Add(backupInformation);
                     _db.GlobalBackupStats.Add(backupInformation);
                     _db.SaveChanges();
                 }
@@ -693,6 +696,7 @@ namespace SQLMonitoring.Controllers
                     backupInformation.DatabaseName = (string)dataReader.GetValue(0);
                     backupInformation.HoursSinceLastBackup = Convert.ToInt64(dataReader.GetValue(2));
 
+                    resultList.Add(backupInformation);
                     _db.GlobalBackupStats.Add(backupInformation);
                     _db.SaveChanges();
                 }
@@ -714,6 +718,8 @@ namespace SQLMonitoring.Controllers
                     dataReader.Close();
                 }
             }
+
+            return resultList;
         }
 
         [HttpGet]
@@ -948,7 +954,17 @@ namespace SQLMonitoring.Controllers
                 return View("Home", Reports);
             }
 
+            // Basic Information
+            //
             GenerateBasicInformationReport(report, ServerName, StartTime, EndTime);
+
+            // Backup Information
+            //
+            GenerateBackupInformationReport(report, ServerName, StartTime, EndTime);
+
+            // Wait and Spinlock Stats
+            //
+            GenerateWaitStatsReport(report, ServerName, StartTime, EndTime);
 
             _db.Reports.Add(report);
             _db.SaveChanges();
@@ -958,6 +974,76 @@ namespace SQLMonitoring.Controllers
             return View("Home", Reports);
         }
 
+        public void GenerateWaitStatsReport(Report Report, string ServerName, DateTime StartTime, DateTime EndTime)
+        {
+            var connectionStringTemplate = _configuration.GetValue<string>("Templates:ServerConnectionString");
+
+            SqlConnection connection = null;
+            SqlCommand cmd = null;
+            SqlDataReader dataReader = null;
+
+            try
+            {
+                var connectionString = string.Format(
+                    connectionStringTemplate,
+                    "localhost",
+                    "sql_monitoring_db",
+                    "sql@monitoring.com",
+                    "sa");
+
+                connection = new SqlConnection(connectionString);
+                connection.Open();
+
+                // Spinlock Stats
+                //
+                string spinlockQueryText = string.Format(QueryCollection.SpinlockStatForPeriod, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(spinlockQueryText, connection);
+                dataReader = cmd.ExecuteReader();
+                List<GlobalSpinlockStats> spinlockList = new List<GlobalSpinlockStats>();
+                while (dataReader.Read())
+                {
+                    GlobalSpinlockStats globalSpinlockStats = new GlobalSpinlockStats();
+                    globalSpinlockStats.Server = ServerName;
+                    globalSpinlockStats.Collisions = (long)dataReader.GetValue(2);
+                    globalSpinlockStats.Spinlock = (string)dataReader.GetValue(3);
+
+                    int hour = (int)dataReader.GetValue(4);
+                    int day = (int)dataReader.GetValue(5);
+                    int year = (int)dataReader.GetValue(6);
+                    int month = (int)dataReader.GetValue(7);
+
+                    globalSpinlockStats.Date = new DateTime(year: year, month: month, day: day, hour: hour, minute: 0, second: 0);
+
+                    spinlockList.Add(globalSpinlockStats);
+                }
+                dataReader.Close();
+
+                // add wait stats as well 
+
+                Directory.CreateDirectory($"GeneratedReports/{Report.ReportGuid}");
+                System.IO.File.Create($"GeneratedReports/{Report.ReportGuid}/stats.json").Close();
+                string jsonData = JsonSerializer.Serialize(spinlockList);
+                System.IO.File.WriteAllText($"GeneratedReports/{Report.ReportGuid}/wait_stats.json", jsonData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    connection.Close();
+                    connection = null;
+                }
+
+                if (dataReader != null)
+                {
+                    dataReader.Close();
+                    dataReader = null;
+                }
+            }
+        }
         public void GenerateBasicInformationReport(Report Report, string ServerName, DateTime StartTime, DateTime EndTime)
         {
             GenerateBasicInformation(ServerName);
@@ -978,19 +1064,47 @@ namespace SQLMonitoring.Controllers
         }
 
         [HttpGet]
-        public IActionResult View(int Id)
-        {
-            var Report = _db.Reports.Where(report => report.Id == Id).Include(report => report.Server).Include(report => report.User).FirstOrDefault();
-            return View("ViewReport", Report);
-        }
-
-        [HttpGet]
         public JsonResult GetBasicInformationData(string reportId)
         {
             long id = long.Parse(reportId);
             var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
             var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/basic_information.json");
             return new JsonResult(data);
+        }
+
+        public void GenerateBackupInformationReport(Report Report, string ServerName, DateTime StartTime, DateTime EndTime)
+        {
+            var resultList = GenerateBackupInformation(ServerName);
+
+            Directory.CreateDirectory($"GeneratedReports/{Report.ReportGuid}");
+            System.IO.File.Create($"GeneratedReports/{Report.ReportGuid}/backup_information.json").Close();
+            string jsonData = JsonSerializer.Serialize(resultList);
+            System.IO.File.WriteAllText($"GeneratedReports/{Report.ReportGuid}/backup_information.json", jsonData);
+        }
+
+        [HttpGet]
+        public JsonResult GetBackupInformationData(string reportId)
+        {
+            long id = long.Parse(reportId);
+            var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
+            var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/backup_information.json");
+            return new JsonResult(data);
+        }
+
+        [HttpGet]
+        public JsonResult GetWaitStatsData(string reportId)
+        {
+            long id = long.Parse(reportId);
+            var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
+            var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/wait_stats.json");
+            return new JsonResult(data);
+        }
+
+        [HttpGet]
+        public IActionResult View(int Id)
+        {
+            var Report = _db.Reports.Where(report => report.Id == Id).Include(report => report.Server).Include(report => report.User).FirstOrDefault();
+            return View("ViewReport", Report);
         }
     }
 }
