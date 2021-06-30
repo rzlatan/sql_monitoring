@@ -966,6 +966,10 @@ namespace SQLMonitoring.Controllers
             //
             GenerateWaitStatsReport(report, ServerName, StartTime, EndTime);
 
+            // Query Stats
+            //
+            GenerateQueryStatsReport(report, ServerName, StartTime, EndTime);
+
             _db.Reports.Add(report);
             _db.SaveChanges();
 
@@ -1043,7 +1047,7 @@ namespace SQLMonitoring.Controllers
                 var jsonObj = new { spinlockList, waitList };
 
                 Directory.CreateDirectory($"GeneratedReports/{Report.ReportGuid}");
-                System.IO.File.Create($"GeneratedReports/{Report.ReportGuid}/stats.json").Close();
+                System.IO.File.Create($"GeneratedReports/{Report.ReportGuid}/wait_stats.json").Close();
                 string jsonData = JsonSerializer.Serialize(jsonObj);
                 System.IO.File.WriteAllText($"GeneratedReports/{Report.ReportGuid}/wait_stats.json", jsonData);
             }
@@ -1066,6 +1070,95 @@ namespace SQLMonitoring.Controllers
                 }
             }
         }
+
+        public void GenerateQueryStatsReport(Report Report, string ServerName, DateTime StartTime, DateTime EndTime)
+        {
+            var connectionStringTemplate = _configuration.GetValue<string>("Templates:ServerConnectionString");
+
+            SqlConnection connection = null;
+            SqlCommand cmd = null;
+            SqlDataReader dataReader = null;
+
+            try
+            {
+                var connectionString = string.Format(
+                    connectionStringTemplate,
+                    "localhost",
+                    "sql_monitoring_db",
+                    "sql@monitoring.com",
+                    "sa");
+
+                connection = new SqlConnection(connectionString);
+                connection.Open();
+
+                // Query CPU Stats
+                //
+                string queryCPUStats = string.Format(QueryCollection.CPUQueryStatsForPeriod, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(queryCPUStats, connection);
+                dataReader = cmd.ExecuteReader();
+                List<QueriesStats> queryCpuList = new List<QueriesStats>();
+                while (dataReader.Read())
+                {
+                    QueriesStats queriesStats = new QueriesStats();
+                    queriesStats.ServerName = ServerName;
+                    queriesStats.Type = QueriesStatsType.TopQueriesByCpu;
+                    queriesStats.QueryHash = (string)dataReader.GetValue(0);
+                    queriesStats.LastExecTime = (DateTime)dataReader.GetValue(1);
+                    queriesStats.ExecCount = (long)dataReader.GetValue(2);
+                    queriesStats.TotalWorkerTime = (long)dataReader.GetValue(3);
+                    queriesStats.AvgCpuTime = (double)dataReader.GetValue(4);
+
+                    queryCpuList.Add(queriesStats);
+                }
+                dataReader.Close();
+
+                string queryIOStats = string.Format(QueryCollection.IOQueryStatsForPeriod, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(queryIOStats, connection);
+                dataReader = cmd.ExecuteReader();
+                List<QueriesStats> queryIOStatsList = new List<QueriesStats>();
+                while (dataReader.Read())
+                {
+                    QueriesStats queriesStats = new QueriesStats();
+                    queriesStats.Type = QueriesStatsType.TopQueriesByIO;
+                    queriesStats.ServerName = ServerName;
+                    queriesStats.QueryHash = (string)dataReader.GetValue(0);
+                    queriesStats.LastExecTime = (DateTime)dataReader.GetValue(1);
+                    queriesStats.ExecCount = (long)dataReader.GetValue(2);
+                    queriesStats.TotalLogicalWrites = (long)dataReader.GetValue(3);
+                    queriesStats.TotalLogicalReads = (long)dataReader.GetValue(4);
+                    queriesStats.AvgIOsPerExecution = (double)dataReader.GetValue(5);
+
+                    queryIOStatsList.Add(queriesStats);
+                }
+                dataReader.Close();
+
+                var jsonObj = new { queryCpuList, queryIOStatsList };
+
+                Directory.CreateDirectory($"GeneratedReports/{Report.ReportGuid}");
+                System.IO.File.Create($"GeneratedReports/{Report.ReportGuid}/query_stats.json").Close();
+                string jsonData = JsonSerializer.Serialize(jsonObj);
+                System.IO.File.WriteAllText($"GeneratedReports/{Report.ReportGuid}/query_stats.json", jsonData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    connection.Close();
+                    connection = null;
+                }
+
+                if (dataReader != null)
+                {
+                    dataReader.Close();
+                    dataReader = null;
+                }
+            }
+        }
+
         public void GenerateBasicInformationReport(Report Report, string ServerName, DateTime StartTime, DateTime EndTime)
         {
             GenerateBasicInformation(ServerName);
@@ -1119,6 +1212,15 @@ namespace SQLMonitoring.Controllers
             long id = long.Parse(reportId);
             var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
             var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/wait_stats.json");
+            return new JsonResult(data);
+        }
+
+        [HttpGet]
+        public JsonResult GetQueryStats(string reportId)
+        {
+            long id = long.Parse(reportId);
+            var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
+            var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/query_stats.json");
             return new JsonResult(data);
         }
 

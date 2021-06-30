@@ -34,8 +34,152 @@
             generateWaitStats();
         });
 
+        $('#query_stats_href').on('click', function() {
+            generateQueryStats();
+        });
+
         generateBasicInformation();
     });
+
+    function generateQueryStats(){
+        var targetUrl = '@Url.Action("GetQueryStats", "Report")?reportId=' + @Model.Id;
+
+        $.ajax({
+            type: "GET",
+            url: targetUrl,
+            contentType: "application/json",
+            success: function (queryInfo) {
+                document.getElementById("content").style.visibility = "hidden"
+                document.getElementById("content").innerHTML = "<div id='topqueriescpu' class='container' style='position: absolute; top: 40px; left: 50px; width: 1000px;'></div>" +
+                    "<div id='topqueriescpuchart' style='position:absolute; top:300px; left:50px; width: 1000px;'></div>" +
+                    "<div id='topqueriesio' class='container' style='position: absolute; top: 770px; left: 50px; width: 1000px;'></div>" +
+                    "<div id='topqueriesiochart' style='position:absolute; top:1070px; left:50px; width: 1000px;'></div>";;
+                data = JSON.parse(queryInfo);
+                cpuQueryStats = populateQueryCPUStats(data.queryCpuList);
+                document.getElementById("topqueriescpu").innerHTML = cpuQueryStats
+                populateQueryCpuStatsChart(data.queryCpuList);
+                ioQueryStats = populateQueryIOStats(data.queryIOStatsList);
+                document.getElementById("topqueriesio").innerHTML = ioQueryStats
+                populateQueryIOStatsChart(data.queryIOStatsList);
+                document.getElementById("content").style.visibility = "visible"
+                },
+
+            error: function (e) {
+                alert("Failed to retrieve data for report");
+            }
+        });
+    }
+
+    function populateQueryIOStatsChart(data) {
+        var dataArray = new Array()
+
+        for (var i = 0; i < data.length; i++) {
+            var queryStats = data[i];
+            dataArray.push({
+                y: queryStats.TotalLogicalReads + queryStats.TotalLogicalWrites,
+                label: queryStats.QueryHash
+            })
+        }
+
+        var chart = new CanvasJS.Chart("topqueriesiochart", {
+            animationEnabled: true,
+            title: {
+                text: "Top queries by total IO operations"
+            },
+            axisY: {
+                title: "Total IO"
+            },
+            data: [{
+                type: "column",
+                showInLegend: true,
+                legendMarkerColor: "grey",
+                legendText: "Query Hash",
+                dataPoints: dataArray
+            }]
+        });
+        chart.render();
+    }
+
+    function populateQueryCpuStatsChart(data) {
+        var dataArray = new Array()
+
+        for (var i = 0; i < data.length; i++) {
+            var queryStats = data[i];
+            dataArray.push({
+                y: queryStats.TotalWorkerTime,
+                label: queryStats.QueryHash
+            })
+        }
+
+        var chart = new CanvasJS.Chart("topqueriescpuchart", {
+            animationEnabled: true,
+            title: {
+                text: "Top queries by total CPU time"
+            },
+            axisY: {
+                title: "Total CPU time in ms"
+            },
+            data: [{
+                type: "column",
+                showInLegend: true,
+                legendMarkerColor: "grey",
+                legendText: "Query Hash",
+                dataPoints: dataArray
+            }]
+        });
+        chart.render();
+    }
+
+    function populateQueryCPUStats(data) {
+        result = "<div class='row'>" +
+            "<div class='panel panel-info'>" +
+            "<div class='panel-heading'>" +
+            "<h7>Top Queries by CPU usage</h7>" +
+            "</div>" +
+            "<table class='table table-striped table-hover'>" +
+            "<tbody>" +
+            "<thead>" +
+            "<tr>" +
+            "<th>Query Hash</th>" +
+            "<th>Last Execution Time</th>" +
+            "<th>Execution Count</th>" +
+            "<th>Total Worker Time</th>" +
+            "<th>Average CPU Time</th>" +
+            "</tr>" +
+            "</thead>";
+        for (var i = 0; i < data.length; i++) {
+            var query = data[i];
+            result += "<tr><td>" + query.QueryHash + "</td><td>" + query.LastExecTime + "</td><td>" + query.ExecCount + "</td><td>" + query.TotalWorkerTime + "</td><td>" + query.AvgCpuTime + "</td></tr>"
+        }
+        result += "</tbody></table></div></div>"
+        return result;
+    }
+
+    function populateQueryIOStats(data) {
+        result = "<div class='row'>" +
+            "<div class='panel panel-info'>" +
+            "<div class='panel-heading'>" +
+            "<h7>Top Queries by IO Usage</h7>" +
+            "</div>" +
+            "<table class='table table-striped table-hover'>" +
+            "<tbody>" +
+            "<thead>" +
+            "<tr>" +
+            "<th>Query Hash</th>" +
+            "<th>Last Execution Time</th>" +
+            "<th>Execution Count</th>" +
+            "<th>Total Logical Reads</th>" +
+            "<th>Total Logical Writes</th>" +
+            "<th>Average IOs Per Execution</th>" +
+            "</tr>" +
+            "</thead>";
+        for (var i = 0; i < data.length; i++) {
+            var query = data[i];
+            result += "<tr><td>" + query.QueryHash + "</td><td>" + query.LastExecTime + "</td><td>" + query.ExecCount + "</td><td>" + query.TotalLogicalWrites + "</td><td>" + query.TotalLogicalReads + "</td><td>" + query.AvgIOsPerExecution + "</td></tr>"
+        }
+        result += "</tbody></table></div></div>"
+        return result;
+    }
 
     function generateWaitStats() {
         var targetUrl = '@Url.Action("GetWaitStatsData", "Report")?reportId=' + @Model.Id;
@@ -437,7 +581,7 @@
                     <li class="nav-item" role="presentation"><a class="nav-link" href="#">CPU Details</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" href="#">Memory Details</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" href="#">IO Details</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" href="#">Query Stats</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="query_stats_href" href="#">Query Stats</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" id="wait_stats_href" href="#">Wait Stats</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" href="#">Blocking and Deadlocks</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" id="backup_info_href" href="#">Backups</a></li>

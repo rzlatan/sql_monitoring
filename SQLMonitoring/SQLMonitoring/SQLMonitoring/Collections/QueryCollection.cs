@@ -155,5 +155,21 @@ namespace SQLMonitoring.Collections
                WHERE [ServerName] = '{0}' AND 
                [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}')
                GROUP BY WaitType, DATEPART(DAY,[Date]), DATEPART(HOUR, [Date]), DATEPART(YEAR,[Date]), DATEPART(MONTH, [Date])";
+
+        public static string CPUQueryStatsForPeriod =
+            @"SELECT TOP 3 QueryHash, MAX(LastExecTime) as LastExecTime, MAX(ExecCount) - MIN(ExecCount) AS ExecCount, Max(TotalWorkerTime) - MIN(TotalWorkerTime) AS TotalWorkerTime, AVG(AvgCpuTime) AS AvgCpuTime
+              FROM dbo.GlobalQueryStats
+              WHERE [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}')
+              GROUP BY QueryHash
+              ORDER BY TotalWorkerTime DESC";
+
+        public static string IOQueryStatsForPeriod =
+            @"SELECT TOP 3 QueryHash, MAX(LastExecTime) as LastExecTime, MAX(ExecCount) - MIN(ExecCount) AS ExecCount, Max(TotalLogicalWrites) - MIN(TotalLogicalWrites) AS TotalLogicalWrites, Max(TotalLogicalReads) - MIN(TotalLogicalReads) AS TotalLogicalReads, AVG(AvgIOsPerExecution) AS AvgIOsPerExecution, MAX(TotalLogicalWrites) + MAX(TotalLogicalReads) - MIN(TotalLogicalWrites) - MIN(TotalLogicalReads) AS TotalIOs
+              FROM dbo.GlobalQueryStats
+              WHERE ServerName = 'localhost' AND
+              [Date] > CONVERT(DATETIME,'7/1/2021 06:00:00') AND [Date] < CONVERT(DATETIME, '7/1/2021 19:00:00')
+              GROUP BY QueryHash
+              ORDER BY TotalIOs DESC";
     }
 }
