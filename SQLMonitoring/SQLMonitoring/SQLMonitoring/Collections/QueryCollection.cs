@@ -167,9 +167,16 @@ namespace SQLMonitoring.Collections
         public static string IOQueryStatsForPeriod =
             @"SELECT TOP 3 QueryHash, MAX(LastExecTime) as LastExecTime, MAX(ExecCount) - MIN(ExecCount) AS ExecCount, Max(TotalLogicalWrites) - MIN(TotalLogicalWrites) AS TotalLogicalWrites, Max(TotalLogicalReads) - MIN(TotalLogicalReads) AS TotalLogicalReads, AVG(AvgIOsPerExecution) AS AvgIOsPerExecution, MAX(TotalLogicalWrites) + MAX(TotalLogicalReads) - MIN(TotalLogicalWrites) - MIN(TotalLogicalReads) AS TotalIOs
               FROM dbo.GlobalQueryStats
-              WHERE ServerName = 'localhost' AND
-              [Date] > CONVERT(DATETIME,'7/1/2021 06:00:00') AND [Date] < CONVERT(DATETIME, '7/1/2021 19:00:00')
+              WHERE [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}')
               GROUP BY QueryHash
               ORDER BY TotalIOs DESC";
+
+        public static string TempdbSizeThroughTime =
+            @"SELECT ServerName, Date, DataSizeMb, LogSizeMb
+              FROM dbo.GlobalTempdbStats
+              WHERE [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}') AND
+			  DATEPART(MINUTE, [Date]) % 10 = 0";
     }
 }

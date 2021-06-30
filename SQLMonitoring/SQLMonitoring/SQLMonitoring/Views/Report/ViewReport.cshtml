@@ -34,12 +34,123 @@
             generateWaitStats();
         });
 
+        $('#tempdb_info_href').on('click', function() {
+            generateTempdbStats();
+        });
+
         $('#query_stats_href').on('click', function() {
             generateQueryStats();
         });
 
         generateBasicInformation();
     });
+
+    function generateTempdbStats() {
+        var targetUrl = '@Url.Action("GetTempdbStats", "Report")?reportId=' + @Model.Id;
+
+        $.ajax({
+            type: "GET",
+            url: targetUrl,
+            contentType: "application/json",
+            success: function (tempdbInfo) {
+                document.getElementById("content").style.visibility = "hidden"
+                document.getElementById("content").innerHTML = "<div id='tempdbfilelayout' class='container' style='position: absolute; top: 40px; left: 50px; width: 1400px;'></div>" +
+                    "<div id='tempdbsizethroughtime' style='position:absolute; top:550px; left:50px; width: 1400px;'></div>";
+                data = JSON.parse(tempdbInfo);
+                tempdbFileLayout = populateTempdbFileLayou(data.tempdbFileLayout);
+                populateTempdbSizeThroughTimeChart(data.tempdbSizeThroughTime)
+                document.getElementById("tempdbfilelayout").innerHTML = tempdbFileLayout
+                document.getElementById("content").style.visibility = "visible"
+                },
+
+            error: function (e) {
+                alert("Failed to retrieve data for report");
+            }
+        });
+    }
+
+
+    function populateTempdbSizeThroughTimeChart(data) {
+        var dataSizeValues = new Array()
+        var logSizeValues = new Array()
+
+        for (var i = 0; i < data.length; i++) {
+            dataSizeValues.push({
+                x: new Date(data[i].Date),
+                y: data[i].DataSizeMb
+            });
+
+            logSizeValues.push({
+                x: new Date(data[i].Date),
+                y: data[i].LogSizeMb
+            });
+        }
+
+        var chart = new CanvasJS.Chart("tempdbsizethroughtime", {
+            title: {
+                text: "Tempdb Size Through Time"
+            },
+            axisX: {
+                valueFormatString: "HH:mm"
+            },
+            axisY2: {
+                title: "Size MB",
+            },
+            toolTip: {
+                shared: true
+            },
+            legend: {
+                cursor: "pointer",
+                verticalAlign: "top",
+                horizontalAlign: "center",
+                dockInsidePlotArea: true,
+            },
+            data: [{
+                type: "line",
+                axisYType: "secondary",
+                name: "Data MB",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: dataSizeValues
+            },
+            {
+                type: "line",
+                axisYType: "secondary",
+                name: "Log MB",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: logSizeValues
+            }]
+        });
+        chart.render();
+    }
+
+    function populateTempdbFileLayou(data) {
+        result = "<div class='row'>" +
+            "<div class='panel panel-info'>" +
+            "<div class='panel-heading'>" +
+            "<h7>Tempdb File Layout</h7>" +
+            "</div>" +
+            "<table class='table table-striped table-hover'>" +
+            "<tbody>" +
+            "<thead>" +
+            "<tr>" +
+            "<th>File Id</th>" +
+            "<th>File Name</th>" +
+            "<th>File Location</th>" +
+            "<th>File Type</th>" +
+            "<th>File Size</th>" +
+            "<th>Max File Size </th>" +
+            "<th>Growth</th>"
+            "</tr>" +
+            "</thead>";
+        for (var i = 0; i < data.length; i++) {
+            var file = data[i];
+            result += "<tr><td>" + file.FileId + "</td><td>" + file.FileName + "</td><td>"  + file.Location + "</td><td>" + file.FileType + "</td><td>" + file.FileSize + "</td><td>" + file.FileMaxSize + "</td><td>" + file.Growth + "</td></tr>"
+        }
+        result += "</tbody></table></div></div>"
+        return result;
+    }
 
     function generateQueryStats(){
         var targetUrl = '@Url.Action("GetQueryStats", "Report")?reportId=' + @Model.Id;
@@ -585,7 +696,7 @@
                     <li class="nav-item" role="presentation"><a class="nav-link" id="wait_stats_href" href="#">Wait Stats</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" href="#">Blocking and Deadlocks</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" id="backup_info_href" href="#">Backups</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" href="#">TempDB Performance</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="tempdb_info_href" href="#">TempDB Performance</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" href="#">Common Problems</a></li>
                 </ul>
             </div>

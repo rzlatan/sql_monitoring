@@ -537,7 +537,7 @@ namespace SQLMonitoring.Controllers
         }
 
         [HttpGet]
-        public void GenerateTempdbFileLayout(string serverName)
+        public List<TempdbStats> GenerateTempdbFileLayout(string serverName)
         {
             byte[] userIdByteArray;
             HttpContext.Session.TryGetValue("Id", out userIdByteArray);
@@ -551,6 +551,7 @@ namespace SQLMonitoring.Controllers
             SqlConnection connection = null;
             SqlCommand cmd = null;
             SqlDataReader dataReader = null;
+            List<TempdbStats> resultList = new List<TempdbStats>();
 
             try
             {
@@ -581,6 +582,7 @@ namespace SQLMonitoring.Controllers
                     tempdbInformation.FileSize = Convert.ToInt32(dataReader.GetValue(4));
                     tempdbInformation.FileMaxSize = Convert.ToInt32(dataReader.GetValue(5));
                     tempdbInformation.Growth = Convert.ToInt32(dataReader.GetValue(6));
+                    resultList.Add(tempdbInformation);
 
                     _db.GlobalTempdbStats.Add(tempdbInformation);
                     _db.SaveChanges();
@@ -603,6 +605,8 @@ namespace SQLMonitoring.Controllers
                     dataReader.Close();
                 }
             }
+
+            return resultList;
         }
 
         [HttpGet]
@@ -970,12 +974,83 @@ namespace SQLMonitoring.Controllers
             //
             GenerateQueryStatsReport(report, ServerName, StartTime, EndTime);
 
+            // Tempdb Report
+            //
+            GenerateTempdbStatsReport(report, ServerName, StartTime, EndTime);
+
             _db.Reports.Add(report);
             _db.SaveChanges();
 
             Reports = _db.Reports.Where(report => report.User.Id == userId).Include(r => r.Server).Include(r => r.User).OrderByDescending(report => report.CreationTime).Take(5);
 
             return View("Home", Reports);
+        }
+
+        public void GenerateTempdbStatsReport(Report Report, string ServerName, DateTime StartTime, DateTime EndTime)
+        {
+            List<TempdbStats> tempdbFileLayout = GenerateTempdbFileLayout(ServerName);
+
+            var connectionStringTemplate = _configuration.GetValue<string>("Templates:ServerConnectionString");
+
+            SqlConnection connection = null;
+            SqlCommand cmd = null;
+            SqlDataReader dataReader = null;
+
+            try
+            {
+                var connectionString = string.Format(
+                    connectionStringTemplate,
+                    "localhost",
+                    "sql_monitoring_db",
+                    "sql@monitoring.com",
+                    "sa");
+
+                connection = new SqlConnection(connectionString);
+                connection.Open();
+
+                // Tempdb Stats
+                //
+                string TempdbSizeQueryText = string.Format(QueryCollection.TempdbSizeThroughTime, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(TempdbSizeQueryText, connection);
+                dataReader = cmd.ExecuteReader();
+                List<TempdbStats> tempdbSizeThroughTime = new List<TempdbStats>();
+                while (dataReader.Read())
+                {
+                    TempdbStats tempdbStats = new TempdbStats();
+                    tempdbStats.ServerName = ServerName;
+                    tempdbStats.Date = (DateTime)dataReader.GetValue(1);
+                    tempdbStats.DataSizeMb = (int)dataReader.GetValue(2);
+                    tempdbStats.LogSizeMb = (int)dataReader.GetValue(3);
+
+                    tempdbSizeThroughTime.Add(tempdbStats);
+                }
+                dataReader.Close();
+
+                var jsonObj = new { tempdbFileLayout, tempdbSizeThroughTime };
+
+                Directory.CreateDirectory($"GeneratedReports/{Report.ReportGuid}");
+                System.IO.File.Create($"GeneratedReports/{Report.ReportGuid}/tempdb.json").Close();
+                string jsonData = JsonSerializer.Serialize(jsonObj);
+                System.IO.File.WriteAllText($"GeneratedReports/{Report.ReportGuid}/tempdb_stats.json", jsonData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    connection.Close();
+                    connection = null;
+                }
+
+                if (dataReader != null)
+                {
+                    dataReader.Close();
+                    dataReader = null;
+                }
+            }
         }
 
         public void GenerateWaitStatsReport(Report Report, string ServerName, DateTime StartTime, DateTime EndTime)
@@ -1221,6 +1296,15 @@ namespace SQLMonitoring.Controllers
             long id = long.Parse(reportId);
             var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
             var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/query_stats.json");
+            return new JsonResult(data);
+        }
+
+        [HttpGet]
+        public JsonResult GetTempdbStats(string reportId)
+        {
+            long id = long.Parse(reportId);
+            var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
+            var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/tempdb_stats.json");
             return new JsonResult(data);
         }
 
