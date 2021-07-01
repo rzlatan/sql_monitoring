@@ -42,8 +42,131 @@
             generateQueryStats();
         });
 
+        $('#blocking_stats_href').on('click', function() {
+            generateBlockingStats();
+        });
+
         generateBasicInformation();
     });
+
+    function generateBlockingStats() {
+       var targetUrl = '@Url.Action("GetBlockingStats", "Report")?reportId=' + @Model.Id;
+        
+        $.ajax({
+            type: "GET",
+            url: targetUrl,
+            contentType: "application/json",
+            success: function (blockingInfo) {
+                document.getElementById("content").style.visibility = "hidden"
+                document.getElementById("content").innerHTML = "<div id='long_transactions' class='container' style='position: absolute; top: 40px; left: 50px; width: 1400px;'></div>" +
+                    "<div id='deadlocks_through_time' style='position:absolute; top:350px; left:50px; width: 1400px;'></div>" +
+                    "<div id='blocked_processes' style='position:absolute; top:800px; left:50px; width: 1400px;'></div>";
+
+                data = JSON.parse(blockingInfo);
+                longTransactions = populateLongTransactions(data.longTransactions);
+                document.getElementById("long_transactions").innerHTML = longTransactions
+                populateDeadlocksThroughTimeChart(data.deadlocksThroughTime)
+                blockedProcesses = populateBlockedProcesses(data.blockedProcesses)
+                document.getElementById("blocked_processes").innerHTML = blockedProcesses
+                document.getElementById("content").style.visibility = "visible"
+                },
+
+            error: function (e) {
+                alert("Failed to retrieve data for report");
+            }
+        });
+    }
+
+    function populateBlockedProcesses(data) {
+        result = "<div class='row'>" +
+            "<div class='panel panel-info'>" +
+            "<div class='panel-heading'>" +
+            "<h7>Blocked Processes</h7>" +
+            "</div>" +
+            "<table class='table table-striped table-hover'>" +
+            "<tbody>" +
+            "<thead>" +
+            "<tr>" +
+            "<th>Process Id</th>" +
+            "<th>Status</th>" +
+            "<th>Wait Time</th>" +
+            "<th>Wait Resource</th>" +
+            "<th>Database Id</th>" +
+            "</tr>" +
+            "</thead>";
+        for (var i = 0; i < data.length; i++) {
+            var process = data[i];
+            result += "<tr><td>" + process.ProcessId + "</td><td>" + process.Status + "</td><td>" + process.WaitTime + "</td><td>" + process.WaitResource + "</td><td>" + process.DatabaseId + "</td></tr>"
+        }
+        result += "</tbody></table></div></div>"
+        return result;
+    }
+
+    function populateDeadlocksThroughTimeChart(data) {
+        var deadlocksValues = new Array()
+
+        for (var i = 0; i < data.length; i++) {
+            deadlocksValues.push({
+                x: new Date(data[i].Date),
+                y: data[i].TotalDeadlocks
+            });
+        }
+
+        var chart = new CanvasJS.Chart("deadlocks_through_time", {
+            title: {
+                text: "Deadlocks Through Time"
+            },
+            axisX: {
+                valueFormatString: "HH:mm"
+            },
+            axisY2: {
+                title: "Total Deadlocks",
+            },
+            toolTip: {
+                shared: true
+            },
+            legend: {
+                cursor: "pointer",
+                verticalAlign: "top",
+                horizontalAlign: "center",
+                dockInsidePlotArea: true,
+            },
+            data: [{
+                type: "line",
+                axisYType: "secondary",
+                name: "Total Deadlocks",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: deadlocksValues
+            }]
+        });
+        chart.render();
+    }
+
+    function populateLongTransactions(data) {
+        result = "<div class='row'>" +
+            "<div class='panel panel-info'>" +
+            "<div class='panel-heading'>" +
+            "<h7>Long transactions</h7>" +
+            "</div>" +
+            "<table class='table table-striped table-hover'>" +
+            "<tbody>" +
+            "<thead>" +
+            "<tr>" +
+            "<th>Transaction Id</th>" +
+            "<th>Transaction Name</th>" +
+            "<th>Begin Time</th>" +
+            "<th>Duration Min</th>" +
+            "<th>Transaction State</th>" +
+        "</tr>" +
+            "</thead>";
+        for (var i = 0; i < data.length; i++) {
+            var txn = data[i];
+            result += "<tr><td>" + txn.TransactionId + "</td><td>" + txn.Name + "</td><td>" + txn.BeginTime + "</td><td>" + txn.DurationMin + "</td><td>" + txn.State + "</td></tr>"
+        }
+        result += "</tbody></table></div></div>"
+        return result;
+    }
 
     function generateTempdbStats() {
         var targetUrl = '@Url.Action("GetTempdbStats", "Report")?reportId=' + @Model.Id;
@@ -694,7 +817,7 @@
                     <li class="nav-item" role="presentation"><a class="nav-link" href="#">IO Details</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" id="query_stats_href" href="#">Query Stats</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" id="wait_stats_href" href="#">Wait Stats</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" href="#">Blocking and Deadlocks</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="blocking_stats_href" href="#">Blocking and Deadlocks</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" id="backup_info_href" href="#">Backups</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" id="tempdb_info_href" href="#">TempDB Performance</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" href="#">Common Problems</a></li>

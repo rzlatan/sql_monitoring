@@ -978,12 +978,121 @@ namespace SQLMonitoring.Controllers
             //
             GenerateTempdbStatsReport(report, ServerName, StartTime, EndTime);
 
+            // Generate Blocking Stats
+            GenerateBlockingStatsReport(report, ServerName, StartTime, EndTime);
+
             _db.Reports.Add(report);
             _db.SaveChanges();
 
             Reports = _db.Reports.Where(report => report.User.Id == userId).Include(r => r.Server).Include(r => r.User).OrderByDescending(report => report.CreationTime).Take(5);
 
             return View("Home", Reports);
+        }
+
+        public void GenerateBlockingStatsReport(Report report, string ServerName, DateTime StartTime, DateTime EndTime)
+        {
+            var connectionStringTemplate = _configuration.GetValue<string>("Templates:ServerConnectionString");
+
+            SqlConnection connection = null;
+            SqlCommand cmd = null;
+            SqlDataReader dataReader = null;
+
+            try
+            {
+                var connectionString = string.Format(
+                    connectionStringTemplate,
+                    "localhost",
+                    "sql_monitoring_db",
+                    "sql@monitoring.com",
+                    "sa");
+
+                connection = new SqlConnection(connectionString);
+                connection.Open();
+
+                // Long Transactions Stats
+                //
+                string LongTransactionStatsQuery = string.Format(QueryCollection.LongTransactions, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(LongTransactionStatsQuery, connection);
+                dataReader = cmd.ExecuteReader();
+                List<BlockingAndDeadlocks> longTransactions = new List<BlockingAndDeadlocks>();
+                while (dataReader.Read())
+                {
+                    BlockingAndDeadlocks blockingAndDeadlocks = new BlockingAndDeadlocks();
+                    blockingAndDeadlocks.ServerName = ServerName;
+                    blockingAndDeadlocks.Date = (DateTime)dataReader.GetValue(0);
+                    blockingAndDeadlocks.TransactionId = (long)dataReader.GetValue(1);
+                    blockingAndDeadlocks.Name = dataReader.GetValue(2).ToString();
+                    blockingAndDeadlocks.BeginTime = (DateTime)dataReader.GetValue(3);
+                    blockingAndDeadlocks.DurationMin = (long)dataReader.GetValue(4);
+                    blockingAndDeadlocks.State = dataReader.GetValue(5).ToString();
+
+                    longTransactions.Add(blockingAndDeadlocks);
+                }
+                dataReader.Close();
+
+                // Blocked processes
+                //
+                string BlockedProcessesStatsQuery = string.Format(QueryCollection.BlockedProcesses, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(BlockedProcessesStatsQuery, connection);
+                dataReader = cmd.ExecuteReader();
+                List<BlockingAndDeadlocks> blockedProcesses = new List<BlockingAndDeadlocks>();
+                while (dataReader.Read())
+                {
+                    BlockingAndDeadlocks blockedProcess = new BlockingAndDeadlocks();
+                    blockedProcess.ServerName = ServerName;
+                    blockedProcess.Date = (DateTime)dataReader.GetValue(0);
+                    blockedProcess.ProcessId = (int)dataReader.GetValue(1);
+                    blockedProcess.Status = dataReader.GetValue(2).ToString();
+                    blockedProcess.WaitTime = (long)dataReader.GetValue(3);
+                    blockedProcess.WaitResource = dataReader.GetValue(4).ToString();
+                    blockedProcess.DatabaseId = (int)dataReader.GetValue(5);
+
+                    blockedProcesses.Add(blockedProcess);
+                }
+                dataReader.Close();
+
+                // Deadlocks
+                //
+                string DeadlocksQuery = string.Format(QueryCollection.DeadlocksThroughTime, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(DeadlocksQuery, connection);
+                dataReader = cmd.ExecuteReader();
+                List<BlockingAndDeadlocks> deadlocksThroughTime = new List<BlockingAndDeadlocks>();
+                while (dataReader.Read())
+                {
+                    BlockingAndDeadlocks deadlock = new BlockingAndDeadlocks();
+                    deadlock.ServerName = ServerName;
+                    deadlock.Date = (DateTime)dataReader.GetValue(1);
+                    deadlock.TotalDeadlocks = (long)dataReader.GetValue(2);
+
+                    deadlocksThroughTime.Add(deadlock);
+                }
+                dataReader.Close();
+
+                var jsonObj = new { longTransactions, blockedProcesses, deadlocksThroughTime };
+
+                Directory.CreateDirectory($"GeneratedReports/{report.ReportGuid}");
+                System.IO.File.Create($"GeneratedReports/{report.ReportGuid}/blocking_stats.json").Close();
+                string jsonData = JsonSerializer.Serialize(jsonObj);
+                System.IO.File.WriteAllText($"GeneratedReports/{report.ReportGuid}/blocking_stats.json", jsonData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    connection.Close();
+                    connection = null;
+                }
+
+                if (dataReader != null)
+                {
+                    dataReader.Close();
+                    dataReader = null;
+                }
+            }
         }
 
         public void GenerateTempdbStatsReport(Report Report, string ServerName, DateTime StartTime, DateTime EndTime)
@@ -1305,6 +1414,15 @@ namespace SQLMonitoring.Controllers
             long id = long.Parse(reportId);
             var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
             var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/tempdb_stats.json");
+            return new JsonResult(data);
+        }
+
+        [HttpGet]
+        public JsonResult GetBlockingStats(string reportId)
+        {
+            long id = long.Parse(reportId);
+            var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
+            var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/blocking_stats.json");
             return new JsonResult(data);
         }
 

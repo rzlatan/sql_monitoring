@@ -178,5 +178,30 @@ namespace SQLMonitoring.Collections
               WHERE [ServerName] = '{0}' AND 
               [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}') AND
 			  DATEPART(MINUTE, [Date]) % 10 = 0";
+
+        public static string LongTransactions =
+            @"SELECT TOP 5 [Date] as LastDateTime, TransactionId as TxnId, Name, BeginTime, DurationMin, State
+              FROM dbo.GlobalBlockingStats
+              WHERE [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}') AND
+              Type = 0
+              ORDER BY DurationMin DESC";
+
+        public static string BlockedProcesses =
+            @"SELECT TOP 5 [Date] as LastDateTime, ProcessId, Status, WaitTime, WaitResource, DatabaseId
+              FROM dbo.GlobalBlockingStats
+              WHERE [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}') AND
+              Type = 1
+              ORDER BY WaitTime DESC
+            ";
+
+        public static string DeadlocksThroughTime =
+            @"SELECT ServerName, Date, TotalDeadlocks
+              FROM dbo.GlobalBlockingStats
+              WHERE [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}') AND
+			  DATEPART(MINUTE, [Date]) % 15 = 0 AND
+			  Type = 3";
     }
 }
