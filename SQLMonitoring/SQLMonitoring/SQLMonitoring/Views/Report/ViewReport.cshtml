@@ -46,12 +46,259 @@
             generateBlockingStats();
         });
 
+        $('#memory_stats_href').on('click', function () {
+            generateMemoryStats();
+        });
+
         generateBasicInformation();
     });
 
+    function generateMemoryStats() {
+       var targetUrl = '@Url.Action("GetMemoryStats", "Report")?reportId=' + @Model.Id;
+
+        $.ajax({
+            type: "GET",
+            url: targetUrl,
+            contentType: "application/json",
+            success: function (memoryInfo) {
+                document.getElementById("content").style.visibility = "hidden"
+                document.getElementById("content").innerHTML = "<div id='total_target_size' class='container' style='position: absolute; top: 40px; left: 50px; width: 1400px;'></div>" +
+                    "<div id='top_memory_clerks' style='position:absolute; top:470px; left:50px; width: 1400px;'></div>" +
+                    "<div id='buffer_hit_rate' style='position:absolute; top:900px; left:50px; width: 1400px;'></div>" +
+                    "<div id='page_life_expectancy' style='position:absolute; top:1400px; left:50px; width: 1400px;'></div>";
+
+                data = JSON.parse(memoryInfo);
+                populateTargetAndTotalSize(data.totalAndTargetMemory);
+                populateMemoryClerks(data.memoryClerks)
+                populateBufferHitRate(data.bhrAndPle)
+                populatePageLifeExpectancy(data.bhrAndPle)
+                document.getElementById("content").style.visibility = "visible"
+                },
+
+            error: function (e) {
+                alert("Failed to retrieve data for report");
+            }
+        });
+    }
+
+    function populateMemoryClerks(data) {
+        var memoryClerks = new Array()
+        var dict = {}
+
+        for (var i = 0; i < data.length; i++) {
+            var dataObj = data[i]
+            if (!memoryClerks.includes(dataObj.MemoryClerk)) {
+                memoryClerks.push(dataObj.MemoryClerk)
+            }
+
+            if (dict[dataObj.MemoryClerk]) {
+                dict[dataObj.MemoryClerk].push({
+                    y: dataObj.MemoryClerkSize,
+                    x: new Date(dataObj.Date)
+                })
+            } else {
+                dict[dataObj.MemoryClerk] = [{
+                    y: dataObj.MemoryClerkSize,
+                    x: new Date(dataObj.Date)
+                }]
+            }
+        }
+
+        var chart = new CanvasJS.Chart("top_memory_clerks", {
+            title: {
+                text: "Top Memory Clerks"
+            },
+            axisX: {
+                valueFormatString: "HH:mm"
+            },
+            axisY2: {
+                title: "Size MB",
+            },
+            toolTip: {
+                shared: true
+            },
+            legend: {
+                cursor: "pointer",
+                verticalAlign: "top",
+                horizontalAlign: "center",
+                dockInsidePlotArea: true,
+            },
+            data: [{
+                type: "line",
+                axisYType: "secondary",
+                name: memoryClerks[0],
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: dict[memoryClerks[0]]
+            },
+            {
+                type: "line",
+                axisYType: "secondary",
+                name: memoryClerks[1],
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: dict[memoryClerks[1]]
+            },
+            {
+                type: "line",
+                axisYType: "secondary",
+                name: memoryClerks[1],
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: dict[memoryClerks[2]]
+            },
+            {
+                type: "line",
+                axisYType: "secondary",
+                name: memoryClerks[2],
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: dict[memoryClerks[3]]
+            }]
+        });
+        chart.render();
+    }
+
+    function populateTargetAndTotalSize(data) {
+        var totalSizeValues = new Array()
+        var targetSizeValues = new Array()
+
+        for (var i = 0; i < data.length; i++) {
+            totalSizeValues.push({
+                x: new Date(data[i].Date),
+                y: data[i].TotalMemory
+            });
+
+            targetSizeValues.push({
+                x: new Date(data[i].Date),
+                y: data[i].TargetMemory
+            });
+        }
+
+        var chart = new CanvasJS.Chart("total_target_size", {
+            title: {
+                text: "Total and Target Memory"
+            },
+            axisX: {
+                valueFormatString: "HH:mm"
+            },
+            axisY2: {
+                title: "Size MB",
+            },
+            toolTip: {
+                shared: true
+            },
+            legend: {
+                cursor: "pointer",
+                verticalAlign: "bottom",
+                horizontalAlign: "center",
+                dockInsidePlotArea: true,
+            },
+            data: [{
+                type: "line",
+                axisYType: "secondary",
+                name: "Total Memory",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: totalSizeValues
+            },
+            {
+                type: "line",
+                axisYType: "secondary",
+                name: "Target Memory",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: targetSizeValues
+            }]
+        });
+        chart.render();
+    }
+
+    function populateBufferHitRate(data) {
+        var bufferHitRate = new Array()
+
+        for (var i = 0; i < data.length; i++) {
+            bufferHitRate.push({
+                x: new Date(data[i].Date),
+                y: data[i].BufferCacheHitRatio
+            });
+        }
+
+        var chart = new CanvasJS.Chart("buffer_hit_rate", {
+            title: {
+                text: "Buffer Cache Hit Rate"
+            },
+            axisX: {
+                valueFormatString: "HH:mm"
+            },
+            axisY2: {
+                title: "Hit Rate",
+            },
+            toolTip: {
+                shared: true
+            },
+            legend: {
+                cursor: "pointer",
+                verticalAlign: "top",
+                horizontalAlign: "center",
+                dockInsidePlotArea: true,
+            },
+            data: [{
+                type: "line",
+                axisYType: "secondary",
+                name: "Hit Rate",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: bufferHitRate
+            }]
+        });
+        chart.render();
+    }
+
+    function populatePageLifeExpectancy(data) {
+        var pageLifeExpectancy = new Array()
+
+        for (var i = 0; i < data.length; i++) {
+            pageLifeExpectancy.push({
+                x: new Date(data[i].Date),
+                y: data[i].PageLifeExpectancy
+            });
+        }
+
+        var chart = new CanvasJS.Chart("page_life_expectancy", {
+            title: {
+                text: "Page Life Exectancy"
+            },
+            axisX: {
+                valueFormatString: "HH:mm"
+            },
+            axisY2: {
+                title: "Seconds",
+            },
+            toolTip: {
+                shared: true
+            },
+            legend: {
+                cursor: "pointer",
+                verticalAlign: "top",
+                horizontalAlign: "center",
+                dockInsidePlotArea: true,
+            },
+            data: [{
+                type: "line",
+                axisYType: "secondary",
+                name: "Page Life Expectancy",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: pageLifeExpectancy
+            }]
+        });
+        chart.render();
+    }
+
     function generateBlockingStats() {
        var targetUrl = '@Url.Action("GetBlockingStats", "Report")?reportId=' + @Model.Id;
-        
+
         $.ajax({
             type: "GET",
             url: targetUrl,
@@ -813,7 +1060,7 @@
                     <li class="nav-item" role="presentation"><a class="nav-link" id="basic_info_href" href="#">Basic Information</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" href="#">Basic Resource Usage</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" href="#">CPU Details</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" href="#">Memory Details</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="memory_stats_href" href="#">Memory Details</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" href="#">IO Details</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" id="query_stats_href" href="#">Query Stats</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" id="wait_stats_href" href="#">Wait Stats</a></li>

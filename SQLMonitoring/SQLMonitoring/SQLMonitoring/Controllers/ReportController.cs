@@ -979,7 +979,12 @@ namespace SQLMonitoring.Controllers
             GenerateTempdbStatsReport(report, ServerName, StartTime, EndTime);
 
             // Generate Blocking Stats
+            //
             GenerateBlockingStatsReport(report, ServerName, StartTime, EndTime);
+
+            // Generate Memory Stats
+            //
+            GenerateMemoryStatsReport(report, ServerName, StartTime, EndTime);
 
             _db.Reports.Add(report);
             _db.SaveChanges();
@@ -987,6 +992,110 @@ namespace SQLMonitoring.Controllers
             Reports = _db.Reports.Where(report => report.User.Id == userId).Include(r => r.Server).Include(r => r.User).OrderByDescending(report => report.CreationTime).Take(5);
 
             return View("Home", Reports);
+        }
+
+        public void GenerateMemoryStatsReport(Report report, string ServerName, DateTime StartTime, DateTime EndTime)
+        {
+            var connectionStringTemplate = _configuration.GetValue<string>("Templates:ServerConnectionString");
+
+            SqlConnection connection = null;
+            SqlCommand cmd = null;
+            SqlDataReader dataReader = null;
+
+            try
+            {
+                var connectionString = string.Format(
+                    connectionStringTemplate,
+                    "localhost",
+                    "sql_monitoring_db",
+                    "sql@monitoring.com",
+                    "sa");
+
+                connection = new SqlConnection(connectionString);
+                connection.Open();
+
+                // Target and Total Memory
+                //
+                string TargetAndTotalMemory = string.Format(QueryCollection.TargetMemoryStats, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(TargetAndTotalMemory, connection);
+                dataReader = cmd.ExecuteReader();
+                List<MemoryStats> totalAndTargetMemory = new List<MemoryStats>();
+                while (dataReader.Read())
+                {
+                    MemoryStats ms = new MemoryStats();
+                    ms.ServerName = ServerName;
+                    ms.Date = (DateTime)dataReader.GetValue(0);
+                    ms.TotalMemory = (long)dataReader.GetValue(1);
+                    ms.TargetMemory = (long)dataReader.GetValue(2);
+                    ms.Type = MemoryStatsType.TotalAndTargetMemory;
+
+                    totalAndTargetMemory.Add(ms);
+                }
+                dataReader.Close();
+
+                // Buffer cache hit ratio and page life expectancy
+                //
+                string BufferHitRatio = string.Format(QueryCollection.BufferHitRatioAndPLE, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(BufferHitRatio, connection);
+                dataReader = cmd.ExecuteReader();
+                List<MemoryStats> bhrAndPle = new List<MemoryStats>();
+                while (dataReader.Read())
+                {
+                    MemoryStats ms = new MemoryStats();
+                    ms.ServerName = ServerName;
+                    ms.Date = (DateTime)dataReader.GetValue(0);
+                    ms.BufferCacheHitRatio = (long)dataReader.GetValue(1);
+                    ms.PageLifeExpectancy = (long) dataReader.GetValue(2);
+                    ms.Type = MemoryStatsType.BufferHitRatioAndPageLifeExpectancy;
+
+                    bhrAndPle.Add(ms);
+                }
+                dataReader.Close();
+
+                // Memory Clerks
+                //
+                string MemoryClerks = string.Format(QueryCollection.TopMemoryClerks, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(MemoryClerks, connection);
+                dataReader = cmd.ExecuteReader();
+                List<MemoryStats> memoryClerks = new List<MemoryStats>();
+                while (dataReader.Read())
+                {
+                    MemoryStats ms = new MemoryStats();
+                    ms.ServerName = ServerName;
+                    ms.Date = (DateTime)dataReader.GetValue(0);
+                    ms.MemoryClerk = dataReader.GetValue(1).ToString();
+                    ms.MemoryClerkSize = (long)dataReader.GetValue(2);
+                    ms.Type = MemoryStatsType.MemoryClerkStats;
+
+                    memoryClerks.Add(ms);
+                }
+                dataReader.Close();
+
+                var jsonObj = new { totalAndTargetMemory, bhrAndPle, memoryClerks };
+
+                Directory.CreateDirectory($"GeneratedReports/{report.ReportGuid}");
+                System.IO.File.Create($"GeneratedReports/{report.ReportGuid}/memory_stats.json").Close();
+                string jsonData = JsonSerializer.Serialize(jsonObj);
+                System.IO.File.WriteAllText($"GeneratedReports/{report.ReportGuid}/memory_stats.json", jsonData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    connection.Close();
+                    connection = null;
+                }
+
+                if (dataReader != null)
+                {
+                    dataReader.Close();
+                    dataReader = null;
+                }
+            }
         }
 
         public void GenerateBlockingStatsReport(Report report, string ServerName, DateTime StartTime, DateTime EndTime)
@@ -1423,6 +1532,15 @@ namespace SQLMonitoring.Controllers
             long id = long.Parse(reportId);
             var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
             var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/blocking_stats.json");
+            return new JsonResult(data);
+        }
+
+        [HttpGet]
+        public JsonResult GetMemoryStats(string reportId)
+        {
+            long id = long.Parse(reportId);
+            var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
+            var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/memory_stats.json");
             return new JsonResult(data);
         }
 

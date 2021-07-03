@@ -203,5 +203,31 @@ namespace SQLMonitoring.Collections
               [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}') AND
 			  DATEPART(MINUTE, [Date]) % 15 = 0 AND
 			  Type = 3";
+
+        public static string TargetMemoryStats =
+            @"SELECT Date, TotalMemory, TargetMemory
+              FROM dbo.GlobalMemoryStats
+              WHERE [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}') AND
+              Type = 0
+              AND DATEPART(mi, Date) % 10 = 0
+              ORDER BY Date ASC"; 
+
+        public static string BufferHitRatioAndPLE =
+            @"SELECT Date, BufferCacheHitRatio, PageLifeExpectancy
+              FROM dbo.GlobalMemoryStats
+              WHERE [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}') AND
+              Type = 1
+              AND DATEPART(mi, Date) % 10 = 0
+              ORDER BY Date ASC";
+
+        public static string TopMemoryClerks =
+            @"SELECT DATEADD(minute, 10 * (DATEDIFF(minute, 0, Date) / 10), 0) AS Date, MemoryClerk, MemoryClerkSize
+              FROM dbo.GlobalMemoryStats
+              WHERE [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}') AND
+              Type = 2
+              ORDER BY Date ASC";
     }
 }
