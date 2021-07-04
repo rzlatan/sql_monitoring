@@ -272,5 +272,39 @@ namespace SQLMonitoring.Collections
               [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}')
               GROUP BY WorkloadGroup
               ORDER BY ExecTime DESC";
+
+        public static string ThroughputThroughTime =
+            @"SELECT Date, TotalMBps, ReadMBps, WriteMBps
+              FROM dbo.GlobalIOStats
+              WHERE [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}') AND
+              Type = 0
+              AND DATEPART(mi, Date) % 10 = 0
+            ";
+
+        public static string IOPSThroughTime =
+            @"SELECT Date, TotalIOPS, ReadIOPS, WriteIOPS
+              FROM dbo.GlobalIOStats
+              WHERE [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}') AND
+              Type = 1
+              AND DATEPART(mi, Date) % 10 = 0
+            ";
+
+        public static string LatencyThroughTime =
+            @"SELECT Date, ReadLatency, WriteLatency
+              FROM dbo.GlobalIOStats
+              WHERE [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}') AND
+              Type = 2
+              AND DATEPART(mi, Date) % 10 = 0
+            ";
+
+        public static string TopQueriesByIOs =
+            @"SELECT TOP 5 Date, PlanId, TotalIOs, TotalReadIOs, TotalWriteIOs, Id
+             FROM dbo.GlobalIOStats
+             WHERE Type = 3 AND [ServerName] = '{0}' AND 
+             [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}')
+             ORDER BY TotalIOs DESC";
     }
 }

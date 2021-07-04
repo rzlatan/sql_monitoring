@@ -994,6 +994,10 @@ namespace SQLMonitoring.Controllers
             //
             GenerateCPUUsageReport(report, ServerName, StartTime, EndTime);
 
+            // Generate IO Usage Report
+            //
+            GenerateIOUsageReport(report, ServerName, StartTime, EndTime);
+
             _db.Reports.Add(report);
             _db.SaveChanges();
 
@@ -1643,6 +1647,127 @@ namespace SQLMonitoring.Controllers
             }
         }
 
+        public void GenerateIOUsageReport(Report Report, string ServerName, DateTime StartTime, DateTime EndTime)
+        {
+            var connectionStringTemplate = _configuration.GetValue<string>("Templates:ServerConnectionString");
+
+            SqlConnection connection = null;
+            SqlCommand cmd = null;
+            SqlDataReader dataReader = null;
+
+            try
+            {
+                var connectionString = string.Format(
+                    connectionStringTemplate,
+                    "localhost",
+                    "sql_monitoring_db",
+                    "sql@monitoring.com",
+                    "sa");
+
+                connection = new SqlConnection(connectionString);
+                connection.Open();
+
+                // Throughput
+                //
+                string queryText = string.Format(QueryCollection.ThroughputThroughTime, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(queryText, connection);
+                dataReader = cmd.ExecuteReader();
+                List<IOStats> throughput = new List<IOStats>();
+                while (dataReader.Read())
+                {
+                    IOStats result = new IOStats();
+                    result.Type = IOStatsType.Throughput;
+                    result.ServerName = ServerName;
+                    result.Date = (DateTime)dataReader.GetValue(0);
+                    result.TotalMBps = (long)dataReader.GetValue(1);
+                    result.ReadMBps = (long)dataReader.GetValue(2);
+                    result.WriteMBps = (long)dataReader.GetValue(3);
+
+                    throughput.Add(result);
+                }
+                dataReader.Close();
+
+                queryText = string.Format(QueryCollection.IOPSThroughTime, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(queryText, connection);
+                dataReader = cmd.ExecuteReader();
+                List<IOStats> IOPS = new List<IOStats>();
+                while (dataReader.Read())
+                {
+                    IOStats result = new IOStats();
+                    result.ServerName = ServerName;
+                    result.Type = IOStatsType.IOPS;
+                    result.Date = (DateTime)dataReader.GetValue(0);
+                    result.TotalIOPS = (long)dataReader.GetValue(1);
+                    result.ReadIOPS = (long)dataReader.GetValue(2);
+                    result.WriteIOPS = (long)dataReader.GetValue(3);
+
+                    IOPS.Add(result);
+                }
+                dataReader.Close();
+
+                queryText = string.Format(QueryCollection.LatencyThroughTime, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(queryText, connection);
+                dataReader = cmd.ExecuteReader();
+                List<IOStats> latency = new List<IOStats>();
+                while (dataReader.Read())
+                {
+                    IOStats result = new IOStats();
+                    result.ServerName = ServerName;
+                    result.Type = IOStatsType.Latency;
+                    result.Date = (DateTime)dataReader.GetValue(0);
+                    result.ReadLatency = (long)dataReader.GetValue(1);
+                    result.WriteLatency = (long)dataReader.GetValue(2);
+
+                    latency.Add(result);
+                }
+                dataReader.Close();
+
+                queryText = string.Format(QueryCollection.TopQueriesByIOs, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(queryText, connection);
+                dataReader = cmd.ExecuteReader();
+                List<IOStats> topQueries = new List<IOStats>();
+                while (dataReader.Read())
+                {
+                    IOStats result = new IOStats();
+                    result.ServerName = ServerName;
+                    result.Type = IOStatsType.TopQueries;
+                    result.Date = (DateTime)dataReader.GetValue(0);
+                    result.PlanId = (string)dataReader.GetValue(1);
+                    result.TotalIOs = (long)dataReader.GetValue(2);
+                    result.TotalReadIOs = (long)dataReader.GetValue(3);
+                    result.TotalWriteIOs = (long)dataReader.GetValue(4);
+
+                    topQueries.Add(result);
+                }
+                dataReader.Close();
+
+                var jsonObj = new { throughput, IOPS, latency, topQueries };
+
+                Directory.CreateDirectory($"GeneratedReports/{Report.ReportGuid}");
+                System.IO.File.Create($"GeneratedReports/{Report.ReportGuid}/io_stats.json").Close();
+                string jsonData = JsonSerializer.Serialize(jsonObj);
+                System.IO.File.WriteAllText($"GeneratedReports/{Report.ReportGuid}/io_stats.json", jsonData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    connection.Close();
+                    connection = null;
+                }
+
+                if (dataReader != null)
+                {
+                    dataReader.Close();
+                    dataReader = null;
+                }
+            }
+        }
+
         public void GenerateBasicInformationReport(Report Report, string ServerName, DateTime StartTime, DateTime EndTime)
         {
             GenerateBasicInformation(ServerName);
@@ -1750,6 +1875,15 @@ namespace SQLMonitoring.Controllers
             long id = long.Parse(reportId);
             var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
             var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/cpu_stats.json");
+            return new JsonResult(data);
+        }
+
+        [HttpGet]
+        public JsonResult GetIOStats(string reportId)
+        {
+            long id = long.Parse(reportId);
+            var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
+            var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/io_stats.json");
             return new JsonResult(data);
         }
 
