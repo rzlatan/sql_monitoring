@@ -998,12 +998,135 @@ namespace SQLMonitoring.Controllers
             //
             GenerateIOUsageReport(report, ServerName, StartTime, EndTime);
 
+            // Generate Common Problems
+            //
+            GenerateCommonProblems(report, ServerName, StartTime, EndTime);
+
             _db.Reports.Add(report);
             _db.SaveChanges();
 
             Reports = _db.Reports.Where(report => report.User.Id == userId).Include(r => r.Server).Include(r => r.User).OrderByDescending(report => report.CreationTime).Take(5);
 
             return View("Home", Reports);
+        }
+
+        public void GenerateCommonProblems(Report report, string ServerName, DateTime StartTime, DateTime EndTime)
+        {
+            var connectionStringTemplate = _configuration.GetValue<string>("Templates:ServerConnectionString");
+
+            SqlConnection connection = null;
+            SqlCommand cmd = null;
+            SqlDataReader dataReader = null;
+
+            try
+            {
+                var connectionString = string.Format(
+                    connectionStringTemplate,
+                    "localhost",
+                    "sql_monitoring_db",
+                    "sql@monitoring.com",
+                    "sa");
+
+                connection = new SqlConnection(connectionString);
+                connection.Open();
+
+                // Log Full Problem
+                //
+                string LogFullQuery = string.Format(QueryCollection.LogFullProblem, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(LogFullQuery, connection);
+                dataReader = cmd.ExecuteReader();
+                List<CommonProblems> logFull = new List<CommonProblems>();
+                while (dataReader.Read())
+                {
+                    CommonProblems result = new CommonProblems();
+                    result.ServerName = ServerName;
+                    result.DbName = (string)dataReader.GetValue(0);
+                    result.FreeSpaceMb = (double)dataReader.GetValue(1);
+
+                    logFull.Add(result);
+                }
+                dataReader.Close();
+
+                // Long Transactions
+                //
+                string LongTransactionsQuery = string.Format(QueryCollection.LongTransactionProblem, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(LongTransactionsQuery, connection);
+                dataReader = cmd.ExecuteReader();
+                List<CommonProblems> longTranscations = new List<CommonProblems>();
+                while (dataReader.Read())
+                {
+                    CommonProblems result = new CommonProblems();
+                    result.ServerName = ServerName;
+                    result.TransactionId = (int)dataReader.GetValue(0);
+                    result.TransactionName = (string)dataReader.GetValue(1);
+                    result.Duration = (long)dataReader.GetValue(2);
+                    result.State = (string)dataReader.GetValue(3);
+
+                    longTranscations.Add(result);
+                }
+                dataReader.Close();
+
+                // Missing Backups
+                //
+                string MissingBackups = string.Format(QueryCollection.MissingBackups, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(MissingBackups, connection);
+                dataReader = cmd.ExecuteReader();
+                List<CommonProblems> missingBackups = new List<CommonProblems>();
+                while (dataReader.Read())
+                {
+                    CommonProblems result = new CommonProblems();
+                    result.ServerName = ServerName;
+                    result.DbName = (string)dataReader.GetValue(0);
+                    result.HoursSinceLastBackup = (long)dataReader.GetValue(1);
+
+                    missingBackups.Add(result);
+                }
+                dataReader.Close();
+
+                // Missing Indexes
+                //
+                string MissingIndexes = string.Format(QueryCollection.MissingIndexes, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(MissingIndexes, connection);
+                dataReader = cmd.ExecuteReader();
+                List<CommonProblems> missingIndexes = new List<CommonProblems>();
+                while (dataReader.Read())
+                {
+                    CommonProblems result = new CommonProblems();
+                    result.ServerName = ServerName;
+                    result.DatabaseId = (long)dataReader.GetValue(0);
+                    result.EqualityColumns = (string)dataReader.GetValue(1);
+                    result.InequalityColumns = (string)dataReader.GetValue(2);
+
+                    missingIndexes.Add(result);
+                }
+                dataReader.Close();
+
+
+                var jsonObj = new { logFull, longTranscations, missingBackups, missingIndexes };
+
+                Directory.CreateDirectory($"GeneratedReports/{report.ReportGuid}");
+                System.IO.File.Create($"GeneratedReports/{report.ReportGuid}/common_problems.json").Close();
+                string jsonData = JsonSerializer.Serialize(jsonObj);
+                System.IO.File.WriteAllText($"GeneratedReports/{report.ReportGuid}/common_problems.json", jsonData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    connection.Close();
+                    connection = null;
+                }
+
+                if (dataReader != null)
+                {
+                    dataReader.Close();
+                    dataReader = null;
+                }
+            }
         }
 
         public void GenerateBasicResourceUsage(Report report, string ServerName, DateTime StartTime, DateTime EndTime)
@@ -1884,6 +2007,15 @@ namespace SQLMonitoring.Controllers
             long id = long.Parse(reportId);
             var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
             var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/io_stats.json");
+            return new JsonResult(data);
+        }
+
+        [HttpGet]
+        public JsonResult GetCommonProblems(string reportId)
+        {
+            long id = long.Parse(reportId);
+            var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
+            var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/common_problems.json");
             return new JsonResult(data);
         }
 

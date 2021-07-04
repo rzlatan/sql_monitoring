@@ -306,5 +306,37 @@ namespace SQLMonitoring.Collections
              WHERE Type = 3 AND [ServerName] = '{0}' AND 
              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}')
              ORDER BY TotalIOs DESC";
+
+        public static string LogFullProblem =
+            @"SELECT DISTINCT DbName, MIN(FreeSpaceMb) AS FreeSpaceMb FROM dbo.GlobalCommonProblems
+              WHERE Type = 0 AND
+              [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}') AND
+              FreeSpaceMb < 1024
+              GROUP BY DbName, FreeSpaceMb";
+
+        public static string LongTransactionProblem =
+            @"SELECT DISTINCT TransactionId, TransactionName, MAX(Duration) AS Duration, State FROM dbo.GlobalCommonProblems
+              WHERE Type = 1 AND
+              [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}') AND
+              Duration > 350
+              GROUP BY TransactionId, TransactionName, state, Duration";
+
+        public static string MissingBackups =
+            @"SELECT DISTINCT DbName, MAX(HoursSinceLastBackup) as HoursSinceLastBackup FROM dbo.GlobalCommonProblems
+              WHERE Type = 2 AND
+              [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}') AND
+              HoursSinceLastBackup > 24
+              GROUP BY DbName, HoursSinceLastBackup
+            ";
+
+        public static string MissingIndexes =
+            @"SELECT DISTINCT DatabaseId, EqualityColumns, InequalityColumns FROM dbo.GlobalCommonProblems
+              WHERE Type = 3 AND
+              [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}')
+            ";
     }
 }
