@@ -986,12 +986,88 @@ namespace SQLMonitoring.Controllers
             //
             GenerateMemoryStatsReport(report, ServerName, StartTime, EndTime);
 
+            // Generate Basic Resource Usage
+            //
+            GenerateBasicResourceUsage(report, ServerName, StartTime, EndTime);
+
+            // Generate CPU Usage Report
+            //
+            GenerateCPUUsageReport(report, ServerName, StartTime, EndTime);
+
             _db.Reports.Add(report);
             _db.SaveChanges();
 
             Reports = _db.Reports.Where(report => report.User.Id == userId).Include(r => r.Server).Include(r => r.User).OrderByDescending(report => report.CreationTime).Take(5);
 
             return View("Home", Reports);
+        }
+
+        public void GenerateBasicResourceUsage(Report report, string ServerName, DateTime StartTime, DateTime EndTime)
+        {
+            var connectionStringTemplate = _configuration.GetValue<string>("Templates:ServerConnectionString");
+
+            SqlConnection connection = null;
+            SqlCommand cmd = null;
+            SqlDataReader dataReader = null;
+
+            try
+            {
+                var connectionString = string.Format(
+                    connectionStringTemplate,
+                    "localhost",
+                    "sql_monitoring_db",
+                    "sql@monitoring.com",
+                    "sa");
+
+                connection = new SqlConnection(connectionString);
+                connection.Open();
+
+                // Basic Resource Usage
+                //
+                string BasicResourceUsageQuery = string.Format(QueryCollection.BasicResourceUsageQuery, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(BasicResourceUsageQuery, connection);
+                dataReader = cmd.ExecuteReader();
+                List<BasicResourceUsage> basicResourceUsage = new List<BasicResourceUsage>();
+                while (dataReader.Read())
+                {
+                    BasicResourceUsage bru = new BasicResourceUsage();
+                    bru.ServerName = ServerName;
+                    bru.Date = (DateTime)dataReader.GetValue(0);
+                    bru.CpuUsage = (double)dataReader.GetValue(1);
+                    bru.MemoryUsage = (double)dataReader.GetValue(2);
+                    bru.NetworkUsage = (double)dataReader.GetValue(3);
+                    bru.BatchRequests = (double)dataReader.GetValue(4);
+                    bru.UserConnections = (double)dataReader.GetValue(5);
+
+                    basicResourceUsage.Add(bru);
+                }
+                dataReader.Close();
+
+                var jsonObj = new { basicResourceUsage};
+
+                Directory.CreateDirectory($"GeneratedReports/{report.ReportGuid}");
+                System.IO.File.Create($"GeneratedReports/{report.ReportGuid}/basic_resource_usage.json").Close();
+                string jsonData = JsonSerializer.Serialize(jsonObj);
+                System.IO.File.WriteAllText($"GeneratedReports/{report.ReportGuid}/basic_resource_usage.json", jsonData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    connection.Close();
+                    connection = null;
+                }
+
+                if (dataReader != null)
+                {
+                    dataReader.Close();
+                    dataReader = null;
+                }
+            }
         }
 
         public void GenerateMemoryStatsReport(Report report, string ServerName, DateTime StartTime, DateTime EndTime)
@@ -1452,6 +1528,121 @@ namespace SQLMonitoring.Controllers
             }
         }
 
+        public void GenerateCPUUsageReport(Report Report, string ServerName, DateTime StartTime, DateTime EndTime)
+        {
+            var connectionStringTemplate = _configuration.GetValue<string>("Templates:ServerConnectionString");
+
+            SqlConnection connection = null;
+            SqlCommand cmd = null;
+            SqlDataReader dataReader = null;
+
+            try
+            {
+                var connectionString = string.Format(
+                    connectionStringTemplate,
+                    "localhost",
+                    "sql_monitoring_db",
+                    "sql@monitoring.com",
+                    "sa");
+
+                connection = new SqlConnection(connectionString);
+                connection.Open();
+
+                // Total and User CPU
+                //
+                string queryText = string.Format(QueryCollection.TotalAndUserCpu, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(queryText, connection);
+                dataReader = cmd.ExecuteReader();
+                List<CPUStats> totalAndUserCpu = new List<CPUStats>();
+                while (dataReader.Read())
+                {
+                    CPUStats result = new CPUStats();
+                    result.Type = CpuStatsType.TotalAndUserCPU;
+                    result.ServerName = ServerName;
+                    result.Date = (DateTime)dataReader.GetValue(0);
+                    result.CPUTotalTime = (long)dataReader.GetValue(1);
+                    result.CPUUserTime = (long)dataReader.GetValue(2);
+
+                    totalAndUserCpu.Add(result);
+                }
+                dataReader.Close();
+
+                queryText = string.Format(QueryCollection.CompileAndExecCpuTime, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(queryText, connection);
+                dataReader = cmd.ExecuteReader();
+                List<CPUStats> compileAndExecStats = new List<CPUStats>();
+                while (dataReader.Read())
+                {
+                    CPUStats result = new CPUStats();
+                    result.ServerName = ServerName;
+                    result.Type = CpuStatsType.CompileAndExecCPU;
+                    result.Date = (DateTime)dataReader.GetValue(0);
+                    result.CompileCPUTime = (long)dataReader.GetValue(1);
+                    result.ExecCPUTime = (long)dataReader.GetValue(2);
+
+                    compileAndExecStats.Add(result);
+                }
+                dataReader.Close();
+
+                queryText = string.Format(QueryCollection.TopQueriesByCpu, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(queryText, connection);
+                dataReader = cmd.ExecuteReader();
+                List<CPUStats> topQueriesByCPU = new List<CPUStats>();
+                while (dataReader.Read())
+                {
+                    CPUStats result = new CPUStats();
+                    result.ServerName = ServerName;
+                    result.Type = CpuStatsType.Top5QueriesByCpu;
+                    result.QueryHash = (string)dataReader.GetValue(0);
+                    result.QueryExecTime = (long)dataReader.GetValue(1);
+
+                    topQueriesByCPU.Add(result);
+                }
+                dataReader.Close();
+
+                queryText = string.Format(QueryCollection.TopWorkloadGroups, ServerName, StartTime.ToString(), EndTime.ToString());
+                cmd = new SqlCommand(queryText, connection);
+                dataReader = cmd.ExecuteReader();
+                List<CPUStats> topWorkloadGroups = new List<CPUStats>();
+                while (dataReader.Read())
+                {
+                    CPUStats result = new CPUStats();
+                    result.ServerName = ServerName;
+                    result.Type = CpuStatsType.Top5WorkloadGroupsByCPU;
+                    result.WorkloadGroup = (string)dataReader.GetValue(0);
+                    result.WorkloadGroupCPUTime = (long)dataReader.GetValue(1);
+
+                    topWorkloadGroups.Add(result);
+                }
+                dataReader.Close();
+
+                var jsonObj = new { totalAndUserCpu, compileAndExecStats, topQueriesByCPU, topWorkloadGroups };
+
+                Directory.CreateDirectory($"GeneratedReports/{Report.ReportGuid}");
+                System.IO.File.Create($"GeneratedReports/{Report.ReportGuid}/cpu_stats.json").Close();
+                string jsonData = JsonSerializer.Serialize(jsonObj);
+                System.IO.File.WriteAllText($"GeneratedReports/{Report.ReportGuid}/cpu_stats.json", jsonData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    connection.Close();
+                    connection = null;
+                }
+
+                if (dataReader != null)
+                {
+                    dataReader.Close();
+                    dataReader = null;
+                }
+            }
+        }
+
         public void GenerateBasicInformationReport(Report Report, string ServerName, DateTime StartTime, DateTime EndTime)
         {
             GenerateBasicInformation(ServerName);
@@ -1541,6 +1732,24 @@ namespace SQLMonitoring.Controllers
             long id = long.Parse(reportId);
             var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
             var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/memory_stats.json");
+            return new JsonResult(data);
+        }
+
+        [HttpGet]
+        public JsonResult GetBasicResourceUsage(string reportId)
+        {
+            long id = long.Parse(reportId);
+            var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
+            var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/basic_resource_usage.json");
+            return new JsonResult(data);
+        }
+
+        [HttpGet]
+        public JsonResult GetCPUStats(string reportId)
+        {
+            long id = long.Parse(reportId);
+            var report = _db.Reports.Where(report => report.Id == id).FirstOrDefault();
+            var data = System.IO.File.ReadAllText($"GeneratedReports/{report.ReportGuid}/cpu_stats.json");
             return new JsonResult(data);
         }
 

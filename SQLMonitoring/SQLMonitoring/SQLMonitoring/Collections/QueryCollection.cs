@@ -229,5 +229,48 @@ namespace SQLMonitoring.Collections
               [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}') AND
               Type = 2
               ORDER BY Date ASC";
+
+        public static string BasicResourceUsageQuery =
+             @"SELECT Date, CpuUsage, MemoryUsage, NetworkUsage, BatchRequests, UserConnections
+               FROM dbo.BasicResourceUsageStats              
+               WHERE [ServerName] = '{0}' AND 
+               [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}')
+               AND DATEPART(mi, Date) % 10 = 0";
+
+        public static string TotalAndUserCpu =
+            @"SELECT Date, CPUTotalTime, CPUUserTime
+              FROM dbo.GlobalCPUStats
+              WHERE [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}') AND
+              Type = 0
+              AND DATEPART(mi, Date) % 10 = 0
+              ORDER BY Date ASC";
+
+        public static string CompileAndExecCpuTime =
+            @"SELECT Date, CompileCPUTime, ExecCPUTime,Type
+              FROM dbo.GlobalCPUStats
+              WHERE [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}') AND
+              Type = 1
+              AND DATEPART(mi, Date) % 10 = 0
+              ORDER BY Date ASC";
+
+        public static string TopQueriesByCpu =
+            @"SELECT TOP 5 QueryHash, MAX(QueryExecTime) - MIN(QueryExecTime) as ExecTime
+              FROM dbo.GlobalCPUStats
+              WHERE QueryHash IS NOT NULL AND 
+              [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}')
+              GROUP BY QueryHash
+              ORDER BY ExecTime DESC";
+
+        public static string TopWorkloadGroups =
+            @"SELECT TOP 5 WorkloadGroup, MAX(WorkloadGroupCPUTime) - MIN(WorkloadGroupCPUTime) as ExecTime
+              FROM dbo.GlobalCPUStats
+              WHERE WorkloadGroup IS NOT NULL AND
+              Type = 3 AND [ServerName] = '{0}' AND 
+              [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}')
+              GROUP BY WorkloadGroup
+              ORDER BY ExecTime DESC";
     }
 }

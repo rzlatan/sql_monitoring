@@ -50,8 +50,456 @@
             generateMemoryStats();
         });
 
+        $('#basic_resource_usage_href').on('click', function() {
+            generateBasicResourceUsage();
+        });
+
+        $('#cpu_stats_href').on('click', function() {
+            generateCpuStats();
+        });
+
         generateBasicInformation();
     });
+
+    function generateCpuStats() {
+        var targetUrl = '@Url.Action("GetCPUStats", "Report")?reportId=' + @Model.Id;
+
+        $.ajax({
+            type: "GET",
+            url: targetUrl,
+            contentType: "application/json",
+            success: function (cpuInfo) {
+                document.getElementById("content").style.visibility = "hidden"
+                document.getElementById("content").innerHTML = "<div id='total_user_cpu' class='container' style='position: absolute; top: 40px; left: 50px; width: 1400px;'></div>" +
+                    "<div id='top_cpu_queries' style='position:absolute; top:490px; left:50px; width: 1400px;'></div>" +
+                    "<div id='compile_exec_cpu' style='position:absolute; top:940px; left:50px; width: 1400px;'></div>" +
+                    "<div id='top_workload_groups_cpu' style='position:absolute; top:1370px; left:50px; width: 1400px;'></div>";
+
+                data = JSON.parse(cpuInfo);
+                populateTotalCpuUsage(data.totalAndUserCpu)
+                populateCompileAndExecCpu(data.compileAndExecStats)
+                populateTopQueriesCpu(data.topQueriesByCPU)
+                populateTopWorkloadGroups(data.topWorkloadGroups)
+                document.getElementById("content").style.visibility = "visible"
+            },
+
+            error: function (e) {
+                alert("Failed to retrieve data for report");
+            }
+        });
+    }
+
+    function populateTopWorkloadGroups(data) {
+        var dataArray = new Array()
+
+        for (var i = 0; i < data.length; i++) {
+            var queryStats = data[i];
+            dataArray.push({
+                y: queryStats.WorkloadGroupCPUTime,
+                label: queryStats.WorkloadGroup
+            })
+        }
+
+        var chart = new CanvasJS.Chart("top_workload_groups_cpu", {
+            animationEnabled: true,
+            title: {
+                text: "Top groups by CPU"
+            },
+            axisY: {
+                title: "CPU Time"
+            },
+            data: [{
+                type: "column",
+                showInLegend: true,
+                legendMarkerColor: "grey",
+                legendText: "Query Hash",
+                dataPoints: dataArray
+            }]
+        });
+        chart.render();
+    }
+
+    function populateTopQueriesCpu(data) {
+        var dataArray = new Array()
+
+        for (var i = 0; i < data.length; i++) {
+            var queryStats = data[i];
+            dataArray.push({
+                    y: queryStats.QueryExecTime,
+                    label: queryStats.QueryHash
+            })
+        }
+
+        var chart = new CanvasJS.Chart("top_cpu_queries", {
+            animationEnabled: true,
+            title: {
+                text: "Top queries by CPU"
+            },
+            axisY: {
+                title: "CPU Time"
+            },
+            data: [{
+                type: "column",
+                showInLegend: true,
+                legendMarkerColor: "grey",
+                legendText: "Query Hash",
+                dataPoints: dataArray
+            }]
+        });
+        chart.render();
+    }
+
+    function populateCompileAndExecCpu(data) {
+        var CompileCpu = new Array()
+        var ExecCpu = new Array()
+
+        for (var i = 0; i < data.length; i++) {
+            CompileCpu.push({
+                x: new Date(data[i].Date),
+                y: data[i].CompileCPUTime
+            });
+
+            ExecCpu.push({
+                x: new Date(data[i].Date),
+                y: data[i].ExecCPUTime
+            });
+        }
+
+        var chart = new CanvasJS.Chart("compile_exec_cpu", {
+            title: {
+                text: "Compile and Exec CPU "
+            },
+            axisX: {
+                valueFormatString: "HH:mm"
+            },
+            axisY2: {
+                title: "CPU ms",
+            },
+            toolTip: {
+                shared: true
+            },
+            legend: {
+                cursor: "pointer",
+                verticalAlign: "bottom",
+                horizontalAlign: "center",
+                dockInsidePlotArea: true,
+            },
+            data: [{
+                type: "line",
+                axisYType: "secondary",
+                name: "Compile CPU Time",
+                lineColor: "purple",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: CompileCpu
+            },
+            {
+                type: "line",
+                axisYType: "secondary",
+                name: "Exec CPU Time",
+                lineColor: "yellow",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: ExecCpu
+            }]
+        });
+        chart.render();
+    }
+
+    function populateTotalCpuUsage(data) {
+        var TotalCpu = new Array()
+        var UserCpu = new Array()
+
+        for (var i = 0; i < data.length; i++) {
+            TotalCpu.push({
+                x: new Date(data[i].Date),
+                y: data[i].CPUTotalTime
+            });
+
+            UserCpu.push({
+                x: new Date(data[i].Date),
+                y: data[i].CPUUserTime
+            });
+        }
+
+        var chart = new CanvasJS.Chart("total_user_cpu", {
+            title: {
+                text: "Total and User CPU"
+            },
+            axisX: {
+                valueFormatString: "HH:mm"
+            },
+            axisY2: {
+                title: "CPU ms",
+            },
+            toolTip: {
+                shared: true
+            },
+            legend: {
+                cursor: "pointer",
+                verticalAlign: "bottom",
+                horizontalAlign: "center",
+                dockInsidePlotArea: true,
+            },
+            data: [{
+                type: "line",
+                axisYType: "secondary",
+                name: "Total CPU",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: TotalCpu
+            },
+            {
+                type: "line",
+                axisYType: "secondary",
+                name: "User CPU",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: UserCpu
+            }]
+        });
+        chart.render();
+    }
+
+    function generateBasicResourceUsage() {
+        var targetUrl = '@Url.Action("GetBasicResourceUsage", "Report")?reportId=' + @Model.Id;
+
+        $.ajax({
+            type: "GET",
+            url: targetUrl,
+            contentType: "application/json",
+            success: function (brInfo) {
+                document.getElementById("content").style.visibility = "hidden"
+                document.getElementById("content").innerHTML = "<div id='cpu_usage_br' class='container' style='position: absolute; top: 40px; left: 50px; width: 1400px;'></div>" +
+                    "<div id='memory_usage_br' style='position:absolute; top:490px; left:50px; width: 1400px;'></div>" +
+                    "<div id='network_usage_br' style='position:absolute; top:940px; left:50px; width: 1400px;'></div>" +
+                    "<div id='batch_requests_br' style='position:absolute; top:1370px; left:50px; width: 1400px;'></div>" +
+                    "<div id='user_conenctions' style='position:absolute; top:1710px; left:50px; width: 1400px;'></div>";
+
+                data = JSON.parse(brInfo);
+                populateCpuUsageChart(data.basicResourceUsage);
+                populateMemoryUsageChart(data.basicResourceUsage);
+                populateNetworkUsageChart(data.basicResourceUsage);
+                populateBatchRequestsChart(data.basicResourceUsage);
+                populateUserConnections(data.basicResourceUsage);
+                document.getElementById("content").style.visibility = "visible"
+            },
+
+            error: function (e) {
+                alert("Failed to retrieve data for report");
+            }
+        });
+    }
+
+    function populateUserConnections(data) {
+        var userConnections = new Array()
+
+        for (var i = 0; i < data.length; i++) {
+            userConnections.push({
+                x: new Date(data[i].Date),
+                y: data[i].UserConnections
+            });
+        }
+
+        var chart = new CanvasJS.Chart("user_conenctions", {
+            title: {
+                text: "Active User Connections"
+            },
+            axisX: {
+                valueFormatString: "HH:mm"
+            },
+            axisY2: {
+                title: "User Connections",
+            },
+            toolTip: {
+                shared: true
+            },
+            legend: {
+                cursor: "pointer",
+                verticalAlign: "top",
+                horizontalAlign: "center",
+                dockInsidePlotArea: true,
+            },
+            data: [{
+                type: "line",
+                axisYType: "secondary",
+                name: "User Connections",
+                lineColor: "red",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: userConnections
+            }]
+        });
+        chart.render();
+    }
+
+    function populateBatchRequestsChart(data) {
+        var batchRequests = new Array()
+
+        for (var i = 0; i < data.length; i++) {
+            batchRequests.push({
+                x: new Date(data[i].Date),
+                y: data[i].BatchRequests
+            });
+        }
+
+        var chart = new CanvasJS.Chart("batch_requests_br", {
+            title: {
+                text: "Average Batch Requests"
+            },
+            axisX: {
+                valueFormatString: "HH:mm"
+            },
+            axisY2: {
+                title: "Batch Requests",
+            },
+            toolTip: {
+                shared: true
+            },
+            legend: {
+                cursor: "pointer",
+                verticalAlign: "top",
+                horizontalAlign: "center",
+                dockInsidePlotArea: true,
+            },
+            data: [{
+                type: "line",
+                axisYType: "secondary",
+                name: "Batch Requests",
+                lineColor: "green",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: batchRequests
+            }]
+        });
+        chart.render();
+    }
+
+    function populateNetworkUsageChart(data) {
+        var networkUsage = new Array()
+
+        for (var i = 0; i < data.length; i++) {
+            networkUsage.push({
+                x: new Date(data[i].Date),
+                y: data[i].NetworkUsage
+            });
+        }
+
+        var chart = new CanvasJS.Chart("network_usage_br", {
+            title: {
+                text: "Network Usage"
+            },
+            axisX: {
+                valueFormatString: "HH:mm"
+            },
+            axisY2: {
+                title: "Percentage",
+            },
+            toolTip: {
+                shared: true
+            },
+            legend: {
+                cursor: "pointer",
+                verticalAlign: "top",
+                horizontalAlign: "center",
+                dockInsidePlotArea: true,
+            },
+            data: [{
+                type: "line",
+                axisYType: "secondary",
+                name: "Network Usage Percentage",
+                lineColor: "purple",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: networkUsage
+            }]
+        });
+        chart.render();
+    }
+
+    function populateMemoryUsageChart(data) {
+        var memoryUsage = new Array()
+
+        for (var i = 0; i < data.length; i++) {
+            memoryUsage.push({
+                x: new Date(data[i].Date),
+                y: data[i].MemoryUsage
+            });
+        }
+
+        var chart = new CanvasJS.Chart("memory_usage_br", {
+            title: {
+                text: "Memory Usage"
+            },
+            axisX: {
+                valueFormatString: "HH:mm"
+            },
+            axisY2: {
+                title: "Percentage",
+            },
+            toolTip: {
+                shared: true
+            },
+            legend: {
+                cursor: "pointer",
+                verticalAlign: "top",
+                horizontalAlign: "center",
+                dockInsidePlotArea: true,
+            },
+            data: [{
+                type: "line",
+                axisYType: "secondary",
+                name: "Memory Usage Percentage",
+                lineColor: "blue",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: memoryUsage
+            }]
+        });
+        chart.render();
+    }
+
+    function populateCpuUsageChart(data) {
+        var cpuUsage = new Array()
+
+        for (var i = 0; i < data.length; i++) {
+            cpuUsage.push({
+                x: new Date(data[i].Date),
+                y: data[i].CpuUsage
+            });
+        }
+
+        var chart = new CanvasJS.Chart("cpu_usage_br", {
+            title: {
+                text: "CPU Usage"
+            },
+            axisX: {
+                valueFormatString: "HH:mm"
+            },
+            axisY2: {
+                title: "Percentage",
+            },
+            toolTip: {
+                shared: true
+            },
+            legend: {
+                cursor: "pointer",
+                verticalAlign: "top",
+                horizontalAlign: "center",
+                dockInsidePlotArea: true,
+            },
+            data: [{
+                type: "line",
+                axisYType: "secondary",
+                name: "Memory Usage Percentage",
+                lineColor: "red",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: cpuUsage
+            }]
+        });
+        chart.render();
+    }
 
     function generateMemoryStats() {
        var targetUrl = '@Url.Action("GetMemoryStats", "Report")?reportId=' + @Model.Id;
@@ -1058,8 +1506,8 @@
             <div class="collapse navbar-collapse" id="navcol-1">
                 <ul class="nav navbar-nav flex-grow-1 justify-content-between">
                     <li class="nav-item" role="presentation"><a class="nav-link" id="basic_info_href" href="#">Basic Information</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" href="#">Basic Resource Usage</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" href="#">CPU Details</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="basic_resource_usage_href" href="#">Basic Resource Usage</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="cpu_stats_href" href="#">CPU Details</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" id="memory_stats_href" href="#">Memory Details</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" href="#">IO Details</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" id="query_stats_href" href="#">Query Stats</a></li>
