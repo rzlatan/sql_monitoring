@@ -338,5 +338,11 @@ namespace SQLMonitoring.Collections
               [ServerName] = '{0}' AND 
               [Date] > CONVERT(DATETIME,'{1}') AND [Date] < CONVERT(DATETIME, '{2}')
             ";
+
+        public static string SmartScaling =
+            @"SELECT TOP 500000 Timestamp, Day, Hour, Minute, CpuUsage, MemoryUsage, NetworkUsage, DiskLatency
+              FROM dbo.SmartPredictionStats
+              WHERE [ServerName] = '{0}'
+              ORDER BY TIMESTAMP DESC";
     }
 }
