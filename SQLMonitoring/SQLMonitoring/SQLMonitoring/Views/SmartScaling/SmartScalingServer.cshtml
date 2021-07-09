@@ -1,0 +1,147 @@
+﻿@model string
+
+@{
+    ViewData["Title"] = "Smart Scaling";
+}
+
+
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+<!------ Include the above in your HEAD tag ---------->-
+
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        WaitForModelFitting('@Model');
+    });
+
+    function WaitForModelFitting(id) {
+        var targetUrl = '@Url.Action("WaitForModelFitting", "SmartScaling")?scalingId=' + id;
+
+        $.ajax({
+            type: "GET",
+            url: targetUrl,
+            contentType: "application/json",
+            success: function (result) {
+                generateSmartScalingChart(id);
+            },
+            error: function (e) {
+                alert("Failed to retrieve data for report");
+            }
+        });
+    }
+
+    function generateSmartScalingChart(id) {
+       var targetUrl = '@Url.Action("GetSmartScalingStats", "SmartScaling")?scalingId=' + id;
+
+        $.ajax({
+            type: "GET",
+            url: targetUrl,
+            contentType: "application/json",
+            success: function (data) {
+                info = JSON.parse(data);
+                renderSmartScalingChart(info);
+            },
+            error: function (e) {
+                alert("Failed to retrieve data for report");
+            }
+        });
+    }
+
+    function renderSmartScalingChart(data) {
+        var cpuStats = []
+        var memoryStats = []
+        var networkStats = []
+
+        for (var i = 0; i < data.length; i++) {
+            res = data[i]
+            cpuStats.push({ x: new Date(res.Date), y: res.CPU })
+            memoryStats.push({ x: new Date(res.Date), y: res.Memory })
+            networkStats.push({ x: new Date(res.Date), y: res.Network })
+        }
+
+        var chart = new CanvasJS.Chart("smart_scaling", {
+            title: {
+                text: "Smart Scaling Predictions"
+            },
+            axisX: {
+                valueFormatString: "DD/hh:mm"
+            },
+            axisY2: {
+                title: "Percentage",
+                suffix: "%"
+            },
+            toolTip: {
+                shared: true
+            },
+            legend: {
+                cursor: "pointer",
+                verticalAlign: "top",
+                horizontalAlign: "center",
+                dockInsidePlotArea: true
+            },
+            data: [{
+                type: "line",
+                axisYType: "secondary",
+                name: "CPU",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: cpuStats
+            },
+            {
+                type: "line",
+                axisYType: "secondary",
+                name: "Memory",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: memoryStats
+            },
+            {
+                type: "line",
+                axisYType: "secondary",
+                name: "Network",
+                showInLegend: true,
+                markerSize: 0,
+                dataPoints: networkStats
+            }]
+        });
+        chart.render();
+    }
+</script>
+
+<div class="list-group" style="width:25%;margin-left:-25%;margin-top:4%;">
+    <a asp-area="" asp-controller="User" asp-action="Profile" class="list-group-item"><i class="fa fa-user-circle-o"></i> <span>&nbsp;&nbsp;&nbsp;Profile</span></a>
+    <a asp-area="" asp-controller="Server" asp-action="Home" class="list-group-item"><i class="fa fa-database"></i> <span>&nbsp;&nbsp;&nbsp;Servers</span></a>
+    <a asp-area="" asp-controller="Report" asp-action="Home" class="list-group-item"><i class="fa fa-sticky-note-o"></i> <span>&nbsp;&nbsp;&nbsp;Reports</span></a>
+    <a asp-area="" asp-controller="Server" asp-action="Add" class="list-group-item"><i class="fa fa-server"></i> <span>&nbsp;&nbsp;&nbsp;Add Server</span></a>
+    <a asp-area="" asp-controller="Query" asp-action="Edit" class="list-group-item"><i class="fa fa-table"></i> <span>&nbsp;&nbsp;&nbsp;Query Editor</span></a>
+    <a asp-area="" asp-controller="SmartScaling" asp-action="Home" class="list-group-item" active><i class="fa fa-lightbulb-o"></i><span>&nbsp;&nbsp;&nbsp; Smart scaling</span></a>
+    <a asp-area="" asp-controller="Home" asp-action="Logout" class="list-group-item"><i class="fa fa-sign-out"></i> <span>&nbsp;&nbsp;&nbsp;Sign Out</span></a>
+</div>
+
+<div class="callout callout-warning" style="position:absolute;width:1500px;top:110px;left:500px;">
+    <h4>Smart Scaling</h4>
+    Smart scaling is a feature that collects the data on the server level and makes smart decisions that will help the customer predict the heavy workload, peak hours,<br />
+    and resource bottlenecks based on historical statistics on the server level, recommending smart scale up/scale down decisions.
+
+    <br /><br />
+
+    To configure and enable smart scaling prediction, it is only necessary to execute <a href="C:\SQLProjects\sql_monitoring\SQLMonitoring\SQLMonitoring\SQLMonitoring\wwwroot\SmartScaling.ps1" download> this script </a>  on the server machine which will periodically collect statistics and upload <br /> them on the server
+    where they can be used for the further analysis.
+
+    <br /><br />
+
+    To continue, please select the server from the server list to see the scaling predictions, or download the script from the link above and setup the smart scaling for <br />
+    wanted servers.
+</div>
+
+
+<div class="container" style="position: absolute; top: 430px; left: 500px; width: 1400px;">
+    <div id="smart_scaling"></div>
+</div>

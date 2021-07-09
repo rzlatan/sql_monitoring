@@ -12,6 +12,16 @@ using Microsoft.ML.Data;
 using System.IO;
 using CsvHelper;
 using System.Data;
+using Microsoft.ML;
+using System.Threading;
+using System.Text.Json;
+
+public enum SmartScalingTypes
+{
+    CPU,
+    Network,
+    Memory
+}
 
 namespace SQLMonitoring.Controllers
 {
@@ -70,7 +80,75 @@ namespace SQLMonitoring.Controllers
 
             var ResultGuid = PredictScalingNeeds(server);
 
-            return View("SmartScalingServer", ResultGuid);
+            return View("SmartScalingServer", ResultGuid.ToString());
+        }
+
+        [HttpGet]
+        public bool WaitForModelFitting(string scalingId)
+        {
+            string cpuPath = "C:\\SQLProjects\\sql_monitoring\\SQLMonitoring\\SQLMonitoring\\SQLMonitoring\\" + scalingId + "\\cpu_result.csv";
+            string memoryPath = "C:\\SQLProjects\\sql_monitoring\\SQLMonitoring\\SQLMonitoring\\SQLMonitoring\\" + scalingId + "\\memory_result.csv";
+            string networkPath = "C:\\SQLProjects\\sql_monitoring\\SQLMonitoring\\SQLMonitoring\\SQLMonitoring\\" + scalingId + "\\network_result.csv";
+
+            while (!System.IO.File.Exists(cpuPath) || !System.IO.File.Exists(memoryPath) || !System.IO.File.Exists(networkPath))
+            {
+                Thread.Sleep(100);
+            }
+
+            return true;
+        }
+
+        class SmartScalingStruct
+        {
+            public DateTime Date { get; set; }
+            public double CPU { get; set; }
+            public double Memory { get; set; }
+            public double Network { get; set; }
+        }
+
+        [HttpGet]
+        public JsonResult GetSmartScalingStats(string scalingId)
+        {
+            List<SmartScalingStruct> resultList = new List<SmartScalingStruct>();
+
+            string cpuPath = "C:\\SQLProjects\\sql_monitoring\\SQLMonitoring\\SQLMonitoring\\SQLMonitoring\\" + scalingId + "\\cpu_result.csv";
+            string memoryPath = "C:\\SQLProjects\\sql_monitoring\\SQLMonitoring\\SQLMonitoring\\SQLMonitoring\\" + scalingId + "\\memory_result.csv";
+            string networkPath = "C:\\SQLProjects\\sql_monitoring\\SQLMonitoring\\SQLMonitoring\\SQLMonitoring\\" + scalingId + "\\network_result.csv";
+
+            var cpuReader = new StreamReader(cpuPath);
+            var memoryReader = new StreamReader(memoryPath);
+            var networkReader = new StreamReader(networkPath);
+
+            // Skip headers
+            //
+            cpuReader.ReadLine();
+            memoryReader.ReadLine();
+            networkReader.ReadLine();
+
+            while (!cpuReader.EndOfStream)
+            {
+                var cpuLine = cpuReader.ReadLine().Split(",");
+                DateTime date = DateTime.Parse(cpuLine[1].Substring(1,10) + " " + cpuLine[2].Substring(0, 8));
+                double CPU = Double.Parse(cpuLine[3]);
+
+                var memoryLine = memoryReader.ReadLine().Split(",");
+                double Memory = Double.Parse(memoryLine[3]);
+
+                var networkLine = networkReader.ReadLine().Split(",");
+                double Network = Double.Parse(networkLine[3]);
+
+                SmartScalingStruct sms = new SmartScalingStruct();
+                sms.Date = date;
+                sms.CPU = CPU;
+                sms.Memory = Memory;
+                sms.Network = Network;
+
+                resultList.Add(sms);
+            }
+
+            var jsonData = JsonSerializer.Serialize(resultList);
+
+            return new JsonResult(jsonData);
         }
 
         public Guid PredictScalingNeeds(string ServerName)
@@ -85,7 +163,7 @@ namespace SQLMonitoring.Controllers
         public void GetTrainingData(string ServerName, Guid guid)
         {
             var stats = _db.SmartPredictionStats.Where(server => server.ServerName == ServerName).
-                            OrderByDescending(server => server.Timestamp).Take(200).ToList();
+                            OrderByDescending(server => server.Timestamp).Take(7500).ToList();
 
             DataTable cpuDT = new DataTable();
             cpuDT.Columns.Add("Day", typeof(int));
@@ -103,7 +181,7 @@ namespace SQLMonitoring.Controllers
             networkDT.Columns.Add("Day", typeof(int));
             networkDT.Columns.Add("Hour", typeof(int));
             networkDT.Columns.Add("Minute", typeof(int));
-            networkDT.Columns.Add("Netwokr", typeof(double));
+            networkDT.Columns.Add("Network", typeof(double));
 
             foreach (var result in stats)
             {
@@ -125,8 +203,16 @@ namespace SQLMonitoring.Controllers
             ToCSV(cpuDT, cpuFilePath);
             ToCSV(memoryDT, memoryFilePath);
             ToCSV(networkDT, networkFilePath);
+
+            Train(cpuFilePath, memoryFilePath, networkFilePath, guid);
         }
 
+        public void Train(string cpuFilePath, string memoryFilePath, string networkFilePath, Guid guid)
+        {
+            System.Diagnostics.Process.Start("python", " C:\\SQLProjects\\sql_monitoring\\SmartScaling\\cpu_predictor.py " + guid.ToString());
+            System.Diagnostics.Process.Start("python", " C:\\SQLProjects\\sql_monitoring\\SmartScaling\\memory_predictor.py " + guid.ToString());
+            System.Diagnostics.Process.Start("python", " C:\\SQLProjects\\sql_monitoring\\SmartScaling\\network_predictor.py " + guid.ToString());
+        }
 
         public static void ToCSV(DataTable dtDataTable, string strFilePath)
         {
