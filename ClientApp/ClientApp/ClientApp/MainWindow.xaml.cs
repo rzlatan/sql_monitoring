@@ -59,6 +59,7 @@ namespace ClientApp
                     Arguments = $"-NoProfile -ExecutionPolicy unrestricted \"{script}\" {ServerName}",
                     UseShellExecute = false
                 };
+                startInfo.CreateNoWindow = true;
                 Process.Start(startInfo);
             }
 
@@ -71,6 +72,7 @@ namespace ClientApp
                     Arguments = $"-NoProfile -ExecutionPolicy unrestricted \"{script}\" {ServerName}",
                     UseShellExecute = false
                 };
+                startInfo.CreateNoWindow = true;
                 Process.Start(startInfo);
             }
 
@@ -83,6 +85,7 @@ namespace ClientApp
                     Arguments = $"-NoProfile -ExecutionPolicy unrestricted \"{script}\" {ServerName}",
                     UseShellExecute = false
                 };
+                startInfo.CreateNoWindow = true;
                 Process.Start(startInfo);
             }
 
@@ -95,6 +98,7 @@ namespace ClientApp
                     Arguments = $"-NoProfile -ExecutionPolicy unrestricted \"{script}\" {ServerName}",
                     UseShellExecute = false
                 };
+                startInfo.CreateNoWindow = true;
                 Process.Start(startInfo);
             }
 
@@ -107,6 +111,7 @@ namespace ClientApp
                     Arguments = $"-NoProfile -ExecutionPolicy unrestricted \"{script}\" {ServerName}",
                     UseShellExecute = false
                 };
+                startInfo.CreateNoWindow = true;
                 Process.Start(startInfo);
             }
 
@@ -119,6 +124,7 @@ namespace ClientApp
                     Arguments = $"-NoProfile -ExecutionPolicy unrestricted \"{script}\" {ServerName}",
                     UseShellExecute = false
                 };
+                startInfo.CreateNoWindow = true;
                 Process.Start(startInfo);
             }
 
@@ -131,6 +137,7 @@ namespace ClientApp
                     Arguments = $"-NoProfile -ExecutionPolicy unrestricted \"{script}\" {ServerName}",
                     UseShellExecute = false
                 };
+                startInfo.CreateNoWindow = true;
                 Process.Start(startInfo);
             }
 
@@ -143,6 +150,7 @@ namespace ClientApp
                     Arguments = $"-NoProfile -ExecutionPolicy unrestricted \"{script}\" {ServerName}",
                     UseShellExecute = false
                 };
+                startInfo.CreateNoWindow = true;
                 Process.Start(startInfo);
             }
 
@@ -155,6 +163,7 @@ namespace ClientApp
                     Arguments = $"-NoProfile -ExecutionPolicy unrestricted \"{script}\" {ServerName}",
                     UseShellExecute = false
                 };
+                startInfo.CreateNoWindow = true;
                 Process.Start(startInfo);
             }
         }

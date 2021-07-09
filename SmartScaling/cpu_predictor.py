@@ -25,7 +25,7 @@ while i < len(days):
     y.append(cpu[i])
     i = i + 1
 
-model = LinearRegression()
+model = LinearRegression(normalize=True)
 model.fit(x, y)
 
 dt = datetime.now()
@@ -35,7 +35,7 @@ hour = last_x[1]
 minute = last_x[2]
 i = 0
 predictions = []
-while i < 432:
+while i < 1000:
     dt = dt + timedelta(minutes=10)
     minute = minute + 10
     if minute >= 60:

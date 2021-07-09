@@ -75,7 +75,7 @@ namespace SQLMonitoring.Controllers
                 }
 
                 HttpContext.Session.Set("Id", BitConverter.GetBytes(user.Id));
-                return RedirectToAction( "Profile", "User", new { id = user.Id });
+                return RedirectToAction( "Home", "Server");
             }
             else
             {
