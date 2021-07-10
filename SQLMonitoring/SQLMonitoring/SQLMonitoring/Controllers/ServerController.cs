@@ -87,5 +87,20 @@ namespace SQLMonitoring.Controllers
             var servers = _db.Servers.Where(server => server.Owner == owner);
             return RedirectToAction("Home");
         }
+
+        [HttpGet]
+        public IActionResult Delete(int id)
+        {
+            byte[] userIdByteArray;
+            HttpContext.Session.TryGetValue("Id", out userIdByteArray);
+            int userId = BitConverter.ToInt32(userIdByteArray);  
+
+            var server = _db.Servers.Where(server => server.Id == id).FirstOrDefault();
+            _db.Servers.Remove(server);
+            _db.SaveChanges();
+
+            var servers = _db.Servers.Include(srv => srv.Owner).Where(server => server.Owner.Id == userId);
+            return View("../Server/Home", servers);
+        }
     }
 }
