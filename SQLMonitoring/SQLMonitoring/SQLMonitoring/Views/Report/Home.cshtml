@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<SQLMonitoring.Model.Report>
 
 @{
-    ViewData["Title"] = "Reports";
+    ViewData["Title"] = "Izveštaji";
 }
 
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
@@ -16,12 +16,12 @@
 <link href="~/css/site.css" rel="stylesheet" />
 
 <div class="list-group" style="width:25%;margin-left:-25%;margin-top:4%;">
-    <a asp-area="" asp-controller="Server" asp-action="Home" class="list-group-item"><i class="fa fa-database"></i> <span>&nbsp;&nbsp;&nbsp;Servers</span></a>
-    <a asp-area="" asp-controller="Report" asp-action="Home" class="list-group-item" active><i class="fa fa-sticky-note-o"></i> <span>&nbsp;&nbsp;&nbsp;Reports</span></a>
-    <a asp-area="" asp-controller="Server" asp-action="Add" class="list-group-item"><i class="fa fa-server"></i> <span>&nbsp;&nbsp;&nbsp;Add Server</span></a>
-    <a asp-area="" asp-controller="Query" asp-action="Edit" class="list-group-item"><i class="fa fa-table"></i> <span>&nbsp;&nbsp;&nbsp;Query Editor</span></a>
-    <a asp-area="" asp-controller="SmartScaling" asp-action="Home" class="list-group-item"><i class="fa fa-lightbulb-o"></i><span>&nbsp;&nbsp;&nbsp; Smart scaling</span></a>
-    <a asp-area="" asp-controller="Home" asp-action="Logout" class="list-group-item"><i class="fa fa-sign-out"></i> <span>&nbsp;&nbsp;&nbsp;Sign Out</span></a>
+    <a asp-area="" asp-controller="Server" asp-action="Home" class="list-group-item"><i class="fa fa-database"></i> <span>&nbsp;&nbsp;&nbsp;Serveri</span></a>
+    <a asp-area="" asp-controller="Report" asp-action="Home" class="list-group-item"><i class="fa fa-sticky-note-o"></i> <span>&nbsp;&nbsp;&nbsp;Izveštaji</span></a>
+    <a asp-area="" asp-controller="Server" asp-action="Add" class="list-group-item"><i class="fa fa-server"></i> <span>&nbsp;&nbsp;&nbsp;Dodaj Server</span></a>
+    <a asp-area="" asp-controller="Query" asp-action="Edit" class="list-group-item"><i class="fa fa-table"></i> <span>&nbsp;&nbsp;&nbsp;Editor Upita</span></a>
+    <a asp-area="" asp-controller="SmartScaling" asp-action="Home" class="list-group-item"><i class="fa fa-lightbulb-o"></i><span>&nbsp;&nbsp;&nbsp; Pametno Skaliranje</span></a>
+    <a asp-area="" asp-controller="Home" asp-action="Logout" class="list-group-item"><i class="fa fa-sign-out"></i> <span>&nbsp;&nbsp;&nbsp; Odjava</span></a>
 </div>
 
 <div class="container" style="position:absolute;top:30px;left:450px;">
@@ -40,12 +40,12 @@
                                 <input class="form-control" placeholder="Server" name="ServerName" type="text" required>
                             </div>
                             <div class="form-group">
-                                <input class="form-control" placeholder="Start Time" name="StartTime" type="datetime-local" value="" required>
+                                <input class="form-control" placeholder="Vreme od" name="StartTime" type="datetime-local" value="" required>
                             </div>
                             <div class="form-group">
-                                <input class="form-control" placeholder="End Time" name="EndTime" type="datetime-local" value="" required>
+                                <input class="form-control" placeholder="Vreme do" name="EndTime" type="datetime-local" value="" required>
                             </div>
-                            <input class="btn btn-lg btn-success btn-block" type="submit" asp-area="" asp-controller="Report" asp-action="Generate" value="Generate">
+                            <input class="btn btn-lg btn-success btn-block" type="submit" asp-area="" asp-controller="Report" asp-action="Generate" value="Generiši">
                         </fieldset>
                     </form>
                 </div>
@@ -64,11 +64,11 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Creation Time</th>
-                        <th>User</th>
+                        <th>Vreme Kreiranja</th>
+                        <th>Korisnik</th>
                         <th>Server</th>
-                        <th>Result Path</th>
-                        <th>Actions</th>
+                        <th>Putanja</th>
+                        <th>Akcije</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -93,7 +93,7 @@
                                 @Html.DisplayFor(modelItem => item.ResultPath)
                             </td>
                             <td style="margin-right:10px;">
-                                <a asp-action="View" asp-route-id="@item.Id">View Report</a>
+                                <a asp-action="View" asp-route-id="@item.Id">Vidi Izveštaj</a>
                             </td>
                         </tr>
                     }

@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<SQLMonitoring.Model.User>
 
 @{
-    ViewData["Title"] = "Home";
+    ViewData["Title"] = "Administrator";
 }
 
 <table class="table">
@@ -20,7 +20,7 @@
                 @Html.DisplayFor(modelItem => item.Email)
             </td>
             <td>|
-                @Html.ActionLink("Delete", "Delete", "User", new { id = item.Id }, new { onclick = "return confirm('Click yes to confirm deletion');" })
+                @Html.ActionLink("Izbriši", "Delete", "User", new { id = item.Id }, new { onclick = "return confirm('Kliknite da ukoliko želite da potvrdite brisanje');" })
             </td>
         </tr>
 }

@@ -1,7 +1,7 @@
 ﻿@model SQLMonitoring.Model.User
 
 @{
-    ViewData["Title"] = "Profile";
+    ViewData["Title"] = "Profil";
 }
 
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
@@ -16,11 +16,10 @@
 <link href="~/css/site.css" rel="stylesheet" />
 
 <div class="list-group" style="width:25%;margin-left:-25%;margin-top:4%;">
-    <a asp-area="" asp-controller="Server" asp-action="Home" class="list-group-item"><i class="fa fa-database"></i> <span>&nbsp;&nbsp;&nbsp;Servers</span></a>
-    <a asp-area="" asp-controller="Report" asp-action="Home" class="list-group-item"><i class="fa fa-sticky-note-o"></i> <span>&nbsp;&nbsp;&nbsp;Reports</span></a>
-    <a asp-area="" asp-controller="Server" asp-action="Add" class="list-group-item"><i class="fa fa-server"></i> <span>&nbsp;&nbsp;&nbsp;Add Server</span></a>
-    <a asp-area="" asp-controller="Query" asp-action="Edit" class="list-group-item"><i class="fa fa-table"></i> <span>&nbsp;&nbsp;&nbsp;Query Editor</span></a>
-    <a asp-area="" asp-controller="SmartScaling" asp-action="Home" class="list-group-item"><i class="fa fa-lightbulb-o"></i><span>&nbsp;&nbsp;&nbsp; Smart scaling</span></a>
-    <a asp-area="" asp-controller="
-       " asp-action="Logout" class="list-group-item"><i class="fa fa-sign-out"></i> <span>&nbsp;&nbsp;&nbsp;Sign Out</span></a>
+    <a asp-area="" asp-controller="Server" asp-action="Home" class="list-group-item"><i class="fa fa-database"></i> <span>&nbsp;&nbsp;&nbsp;Serveri</span></a>
+    <a asp-area="" asp-controller="Report" asp-action="Home" class="list-group-item"><i class="fa fa-sticky-note-o"></i> <span>&nbsp;&nbsp;&nbsp;Izveštaji</span></a>
+    <a asp-area="" asp-controller="Server" asp-action="Add" class="list-group-item"><i class="fa fa-server"></i> <span>&nbsp;&nbsp;&nbsp;Dodaj Server</span></a>
+    <a asp-area="" asp-controller="Query" asp-action="Edit" class="list-group-item"><i class="fa fa-table"></i> <span>&nbsp;&nbsp;&nbsp;Editor Upita</span></a>
+    <a asp-area="" asp-controller="SmartScaling" asp-action="Home" class="list-group-item"><i class="fa fa-lightbulb-o"></i><span>&nbsp;&nbsp;&nbsp; Pametno Skaliranje</span></a>
+    <a asp-area="" asp-controller="Home" asp-action="Logout" class="list-group-item"><i class="fa fa-sign-out"></i> <span>&nbsp;&nbsp;&nbsp; Odjava</span></a>
 </div>

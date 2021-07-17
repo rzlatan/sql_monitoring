@@ -1,5 +1,5 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Početna stranica";
 }
 
 <div class="text-center">
@@ -15,19 +15,19 @@
                 <p style="color:darkred">@ViewBag.ErrorMessage </p>
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        <h3 class="panel-title">Please sign in</h3>
+                        <h3 class="panel-title">Prijava</h3>
                     </div>
                     <div class="panel-body">
                         <form accept-charset="UTF-8" role="form" method="post">
                             <fieldset>
                                 <div class="form-group">
-                                    <input class="form-control" placeholder="E-mail" name="email" type="email" required>
+                                    <input class="form-control" placeholder="Elektronska pošta" name="email" type="email" required>
                                 </div>
                                 <div class="form-group">
-                                    <input class="form-control" placeholder="Password" name="password" type="password" value="" required>
+                                    <input class="form-control" placeholder="Lozinka" name="password" type="password" value="" required>
                                 </div>
-                                <input class="btn btn-lg btn-success btn-block" type="submit" asp-area="" asp-controller="Home" asp-action="Login" value="Login">
-                                <a class="form-group" style="color:darkblue;margin-top:20px;font-size:12px;" asp-area="" asp-controller="Home" asp-action="Signup"> Don't have account ? Sign up now</a>
+                                <input class="btn btn-lg btn-success btn-block" type="submit" asp-area="" asp-controller="Home" asp-action="Login" value="Prijava">
+                                <a class="form-group" style="color:darkblue;margin-top:20px;font-size:12px;" asp-area="" asp-controller="Home" asp-action="Signup"> Nemate nalog? Registrujte se </a>
                             </fieldset>
                         </form>
                     </div>

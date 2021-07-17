@@ -1,7 +1,7 @@
 ﻿@model SQLMonitoring.Model.Report
 
 @{
-    ViewData["Title"] = "Report";
+    ViewData["Title"] = "Pregled Izveštaja";
 }
 
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
@@ -711,13 +711,13 @@
 
         var chart = new CanvasJS.Chart("user_conenctions", {
             title: {
-                text: "Active User Connections"
+                text: "Aktivne Korisničke Konekcije"
             },
             axisX: {
                 valueFormatString: "HH:mm"
             },
             axisY2: {
-                title: "User Connections",
+                title: "Korisničke Konekcije",
             },
             toolTip: {
                 shared: true
@@ -731,7 +731,7 @@
             data: [{
                 type: "line",
                 axisYType: "secondary",
-                name: "User Connections",
+                name: "Korisničke Konekcije",
                 lineColor: "red",
                 showInLegend: true,
                 markerSize: 0,
@@ -753,13 +753,13 @@
 
         var chart = new CanvasJS.Chart("batch_requests_br", {
             title: {
-                text: "Average Batch Requests"
+                text: "Prosek Paketnih Zahteva"
             },
             axisX: {
                 valueFormatString: "HH:mm"
             },
             axisY2: {
-                title: "Batch Requests",
+                title: "Paketni Zahtevi",
             },
             toolTip: {
                 shared: true
@@ -773,7 +773,7 @@
             data: [{
                 type: "line",
                 axisYType: "secondary",
-                name: "Batch Requests",
+                name: "Broj Paketnih Zahteva",
                 lineColor: "green",
                 showInLegend: true,
                 markerSize: 0,
@@ -795,13 +795,13 @@
 
         var chart = new CanvasJS.Chart("network_usage_br", {
             title: {
-                text: "Network Usage"
+                text: "Potrošnja Mrežnog Opsega"
             },
             axisX: {
                 valueFormatString: "HH:mm"
             },
             axisY2: {
-                title: "Percentage",
+                title: "Procenat",
             },
             toolTip: {
                 shared: true
@@ -815,7 +815,7 @@
             data: [{
                 type: "line",
                 axisYType: "secondary",
-                name: "Network Usage Percentage",
+                name: "Potrošnja Mrežnog Opsega",
                 lineColor: "purple",
                 showInLegend: true,
                 markerSize: 0,
@@ -837,13 +837,13 @@
 
         var chart = new CanvasJS.Chart("memory_usage_br", {
             title: {
-                text: "Memory Usage"
+                text: "Potrošnja Memorije"
             },
             axisX: {
                 valueFormatString: "HH:mm"
             },
             axisY2: {
-                title: "Percentage",
+                title: "Procenat",
             },
             toolTip: {
                 shared: true
@@ -857,7 +857,7 @@
             data: [{
                 type: "line",
                 axisYType: "secondary",
-                name: "Memory Usage Percentage",
+                name: "Procenat Iskoršćenosti Memorije",
                 lineColor: "blue",
                 showInLegend: true,
                 markerSize: 0,
@@ -879,13 +879,13 @@
 
         var chart = new CanvasJS.Chart("cpu_usage_br", {
             title: {
-                text: "CPU Usage"
+                text: "CPU potrošnja"
             },
             axisX: {
                 valueFormatString: "HH:mm"
             },
             axisY2: {
-                title: "Percentage",
+                title: "Procenat",
             },
             toolTip: {
                 shared: true
@@ -899,7 +899,7 @@
             data: [{
                 type: "line",
                 axisYType: "secondary",
-                name: "Memory Usage Percentage",
+                name: "Procenat Iskorišćenosti Procesora",
                 lineColor: "red",
                 showInLegend: true,
                 markerSize: 0,
@@ -962,13 +962,13 @@
 
         var chart = new CanvasJS.Chart("top_memory_clerks", {
             title: {
-                text: "Top Memory Clerks"
+                text: "Najkorišćeniji Memorijski Klerkovi"
             },
             axisX: {
                 valueFormatString: "HH:mm"
             },
             axisY2: {
-                title: "Size MB",
+                title: "Veličina MB",
             },
             toolTip: {
                 shared: true
@@ -1033,13 +1033,13 @@
 
         var chart = new CanvasJS.Chart("total_target_size", {
             title: {
-                text: "Total and Target Memory"
+                text: "Ukupna i Ciljana Memorija"
             },
             axisX: {
                 valueFormatString: "HH:mm"
             },
             axisY2: {
-                title: "Size MB",
+                title: "Veličina MB",
             },
             toolTip: {
                 shared: true
@@ -1053,7 +1053,7 @@
             data: [{
                 type: "line",
                 axisYType: "secondary",
-                name: "Total Memory",
+                name: "Ukupna Memorija",
                 showInLegend: true,
                 markerSize: 0,
                 dataPoints: totalSizeValues
@@ -1061,7 +1061,7 @@
             {
                 type: "line",
                 axisYType: "secondary",
-                name: "Target Memory",
+                name: "Ciljana Memorija",
                 showInLegend: true,
                 markerSize: 0,
                 dataPoints: targetSizeValues
@@ -1082,13 +1082,13 @@
 
         var chart = new CanvasJS.Chart("buffer_hit_rate", {
             title: {
-                text: "Buffer Cache Hit Rate"
+                text: "Procenat Pogodataka u Bafer Kešu"
             },
             axisX: {
                 valueFormatString: "HH:mm"
             },
             axisY2: {
-                title: "Hit Rate",
+                title: "Procenat Pogodaka",
             },
             toolTip: {
                 shared: true
@@ -1102,7 +1102,7 @@
             data: [{
                 type: "line",
                 axisYType: "secondary",
-                name: "Hit Rate",
+                name: "Pogodaka",
                 showInLegend: true,
                 markerSize: 0,
                 dataPoints: bufferHitRate
@@ -1123,13 +1123,13 @@
 
         var chart = new CanvasJS.Chart("page_life_expectancy", {
             title: {
-                text: "Page Life Exectancy"
+                text: "Očekivani Životni Vek Stranice"
             },
             axisX: {
                 valueFormatString: "HH:mm"
             },
             axisY2: {
-                title: "Seconds",
+                title: "Sekunde",
             },
             toolTip: {
                 shared: true
@@ -1143,7 +1143,7 @@
             data: [{
                 type: "line",
                 axisYType: "secondary",
-                name: "Page Life Expectancy",
+                name: "Očekivani životni vek stranice",
                 showInLegend: true,
                 markerSize: 0,
                 dataPoints: pageLifeExpectancy
@@ -1184,17 +1184,17 @@
         result = "<div class='row'>" +
             "<div class='panel panel-info'>" +
             "<div class='panel-heading'>" +
-            "<h7>Blocked Processes</h7>" +
+            "<h7>Blokirani Procesi</h7>" +
             "</div>" +
             "<table class='table table-striped table-hover'>" +
             "<tbody>" +
             "<thead>" +
             "<tr>" +
-            "<th>Process Id</th>" +
+            "<th>Id Procesa</th>" +
             "<th>Status</th>" +
-            "<th>Wait Time</th>" +
-            "<th>Wait Resource</th>" +
-            "<th>Database Id</th>" +
+            "<th>Vreme Čekanja</th>" +
+            "<th>Resurs Čekanja</th>" +
+            "<th>Id Baze</th>" +
             "</tr>" +
             "</thead>";
         for (var i = 0; i < data.length; i++) {
@@ -1217,13 +1217,13 @@
 
         var chart = new CanvasJS.Chart("deadlocks_through_time", {
             title: {
-                text: "Deadlocks Through Time"
+                text: "Mrtva Čekanja Kroz Vreme"
             },
             axisX: {
                 valueFormatString: "HH:mm"
             },
             axisY2: {
-                title: "Total Deadlocks",
+                title: "Ukupno Mrtvih Čekanja",
             },
             toolTip: {
                 shared: true
@@ -1237,7 +1237,7 @@
             data: [{
                 type: "line",
                 axisYType: "secondary",
-                name: "Total Deadlocks",
+                name: "Ukupno Mrtvih Čekanja",
                 showInLegend: true,
                 markerSize: 0,
                 dataPoints: deadlocksValues
@@ -1256,11 +1256,11 @@
             "<tbody>" +
             "<thead>" +
             "<tr>" +
-            "<th>Transaction Id</th>" +
-            "<th>Transaction Name</th>" +
-            "<th>Begin Time</th>" +
-            "<th>Duration Min</th>" +
-            "<th>Transaction State</th>" +
+            "<th>Id Transakcije</th>" +
+            "<th>Ime Transakcije</th>" +
+            "<th>Početno Vreme</th>" +
+            "<th>Trajanje u Minutima</th>" +
+            "<th>Stanje Transakcije</th>" +
         "</tr>" +
             "</thead>";
         for (var i = 0; i < data.length; i++) {
@@ -1314,13 +1314,13 @@
 
         var chart = new CanvasJS.Chart("tempdbsizethroughtime", {
             title: {
-                text: "Tempdb Size Through Time"
+                text: "Tempdb Veličina Kroz Vreme"
             },
             axisX: {
                 valueFormatString: "HH:mm"
             },
             axisY2: {
-                title: "Size MB",
+                title: "Veličina MB",
             },
             toolTip: {
                 shared: true
@@ -1334,7 +1334,7 @@
             data: [{
                 type: "line",
                 axisYType: "secondary",
-                name: "Data MB",
+                name: "Podaci MB",
                 showInLegend: true,
                 markerSize: 0,
                 dataPoints: dataSizeValues
@@ -1361,13 +1361,13 @@
             "<tbody>" +
             "<thead>" +
             "<tr>" +
-            "<th>File Id</th>" +
-            "<th>File Name</th>" +
-            "<th>File Location</th>" +
-            "<th>File Type</th>" +
-            "<th>File Size</th>" +
-            "<th>Max File Size </th>" +
-            "<th>Growth</th>"
+            "<th>Id Fajla</th>" +
+            "<th>Ime Fajla</th>" +
+            "<th>Lokacija Fajla</th>" +
+            "<th>Tip Fajla</th>" +
+            "<th>Veličina Fajla</th>" +
+            "<th>Maksimalna Veličina Fajla</th>" +
+            "<th>Rast</th>"
             "</tr>" +
             "</thead>";
         for (var i = 0; i < data.length; i++) {
@@ -1421,16 +1421,16 @@
         var chart = new CanvasJS.Chart("topqueriesiochart", {
             animationEnabled: true,
             title: {
-                text: "Top queries by total IO operations"
+                text: "Upiti sa najvećom potrošnjom diska"
             },
             axisY: {
-                title: "Total IO"
+                title: "Ukupno Ulazno-Izlaznih Operacija"
             },
             data: [{
                 type: "column",
                 showInLegend: true,
                 legendMarkerColor: "grey",
-                legendText: "Query Hash",
+                legendText: "Heš Upita",
                 dataPoints: dataArray
             }]
         });
@@ -1451,16 +1451,16 @@
         var chart = new CanvasJS.Chart("topqueriescpuchart", {
             animationEnabled: true,
             title: {
-                text: "Top queries by total CPU time"
+                text: "Upiti sa najvećom potrošnjom procesora"
             },
             axisY: {
-                title: "Total CPU time in ms"
+                title: "Ukupno procesorsko vreme u ms"
             },
             data: [{
                 type: "column",
                 showInLegend: true,
                 legendMarkerColor: "grey",
-                legendText: "Query Hash",
+                legendText: "Heš Upita",
                 dataPoints: dataArray
             }]
         });
@@ -1471,17 +1471,17 @@
         result = "<div class='row'>" +
             "<div class='panel panel-info'>" +
             "<div class='panel-heading'>" +
-            "<h7>Top Queries by CPU usage</h7>" +
+            "<h7>Upiti sa najvećom potrošnjom procesora</h7>" +
             "</div>" +
             "<table class='table table-striped table-hover'>" +
             "<tbody>" +
             "<thead>" +
             "<tr>" +
-            "<th>Query Hash</th>" +
-            "<th>Last Execution Time</th>" +
-            "<th>Execution Count</th>" +
-            "<th>Total Worker Time</th>" +
-            "<th>Average CPU Time</th>" +
+            "<th>Heš Upita</th>" +
+            "<th>Poslednje Vreme Izvršavanja</th>" +
+            "<th>Broj Izvršavanja</th>" +
+            "<th>Ukupno vreme radnih niti</th>" +
+            "<th>Prosečno procesorsko vreme</th>" +
             "</tr>" +
             "</thead>";
         for (var i = 0; i < data.length; i++) {
@@ -1496,18 +1496,18 @@
         result = "<div class='row'>" +
             "<div class='panel panel-info'>" +
             "<div class='panel-heading'>" +
-            "<h7>Top Queries by IO Usage</h7>" +
+            "<h7>Upiti sa najvećom potrošnjom diska</h7>" +
             "</div>" +
             "<table class='table table-striped table-hover'>" +
             "<tbody>" +
             "<thead>" +
             "<tr>" +
-            "<th>Query Hash</th>" +
-            "<th>Last Execution Time</th>" +
-            "<th>Execution Count</th>" +
-            "<th>Total Logical Reads</th>" +
-            "<th>Total Logical Writes</th>" +
-            "<th>Average IOs Per Execution</th>" +
+            "<th>Heš Upita</th>" +
+            "<th>Poslednje Vreme Izvršavanja</th>" +
+            "<th>Broj Izvršavanja</th>" +
+            "<th>Ukupno Logičkih Čitanja</th>" +
+            "<th>Ukupno Logičkih Upisa</th>" +
+            "<th>Prosečan broj Ulazno/Izlaznih operacija</th>" +
             "</tr>" +
             "</thead>";
         for (var i = 0; i < data.length; i++) {
@@ -1585,7 +1585,7 @@
         var chart = new CanvasJS.Chart("wait_stats", {
             animationEnabled: true,
             title: {
-                text: "Wait Stats",
+                text: "Statistika Čekanja",
                 fontColor: "#0E0E0E"
             },
             axisX: {
@@ -1650,7 +1650,7 @@
         var chart = new CanvasJS.Chart("spinlock_stats", {
             animationEnabled: true,
             title: {
-                text: "Spinlock Stats",
+                text: "Spinlok Statistika",
                 fontColor: "#0E0E0E"
             },
             axisX: {
@@ -1682,7 +1682,7 @@
         }
         str2 = "<span style = \"color:DodgerBlue;\"><strong>" + (e.entries[0].dataPoint.x).getHours() + "</strong></span><br/>";
         total = Math.round(total * 100) / 100;
-        str3 = "<span style = \"color:Tomato\">Total:</span><strong> " + total + "</strong><br/>";
+        str3 = "<span style = \"color:Tomato\">Ukupno:</span><strong> " + total + "</strong><br/>";
         return (str2.concat(str)).concat(str3);
     }
 
@@ -1740,19 +1740,19 @@
         result = "<div class='container' style='position: absolute; top: 40px; left: 50px; width: 1000px;'> <div class='row'>" +
             "<div class='panel panel-info'>" +
             "<div class='panel-heading'>" +
-            "<h7>Backups in the last 24 hours</h7>" +
+            "<h7>Kopije uzete u zadnja 24 časa</h7>" +
             "</div>" +
             "<table class='table table-striped table-hover'>" +
             "<tbody>" +
             "<thead>" +
             "<tr>" +
-            "<th>Database Name</th>" +
-            "<th>Start Time</th>" +
-            "<th>End Time</th>" +
-            "<th>Duration</th>" +
-            "<th>Backup Size</th>" +
-            "<th>Backup Type</th>" +
-            "<th>Backup Location</th>" +
+            "<th>Baza podataka</th>" +
+            "<th>Vreme od</th>" +
+            "<th>Vreme do</th>" +
+            "<th>Trajanje</th>" +
+            "<th>Veličina</th>" +
+            "<th>Tip</th>" +
+            "<th>Lokacija kopije</th>" +
             "</tr>" +
             "</thead>";
         for (var i = 0; i < backupInfo.length; i++) {
@@ -1769,14 +1769,14 @@
         result = "<div class='container' style='position: absolute; top: 300px; left: 50px; width: 500px;'> <div class='row'>" +
             "<div class='panel panel-info'>" +
             "<div class='panel-heading'>" +
-            "<h7>Last Restorable Points In Time</h7>" +
+            "<h7>Obnovljive tačke u vremenu</h7>" +
             "</div>" +
             "<table class='table table-striped table-hover'>" +
             "<tbody>" +
             "<thead>" +
             "<tr>" +
-            "<th>Database Name</th>" +
-            "<th>Last Restorable Point</th>" +
+            "<th>Baza</th>" +
+            "<th>Poslednja obnovljiva vremenska tačka</th>" +
             "</tr>" +
             "</thead>";
         for (var i = 0; i < backupInfo.length; i++) {
@@ -1793,20 +1793,20 @@
         result = "<div class='container' style='position: absolute; top: 520px; left: 50px; width: 500px;'> <div class='row'>" +
             "<div class='panel panel-info'>" +
             "<div class='panel-heading'>" +
-            "<h7>Databases Missing Backup During Last 24 Hours</h7>" +
+            "<h7>Baze kojima nedostaje redudantna kopija u zadnja 24 časa</h7>" +
             "</div>" +
             "<table class='table table-striped table-hover'>" +
             "<tbody>" +
             "<thead>" +
             "<tr>" +
-            "<th>Database Name</th>" +
-            "<th>Hours Since Last Backup</th>" +
+            "<th>Baza</th>" +
+            "<th>Broj časova od zadnje kopije</th>" +
             "</tr>" +
             "</thead>";
         for (var i = 0; i < backupInfo.length; i++) {
             var backup = backupInfo[i];
             if (backup.Type == "2") {
-                var hoursSinceLastBackup = backup.HoursSinceLastBackup == "9999" ? " No backups for this database" : backup.HoursSinceLastBackup
+                var hoursSinceLastBackup = backup.HoursSinceLastBackup == "9999" ? " Nema kopija za ovu bazu" : backup.HoursSinceLastBackup
                 result += "<tr><td>" + backup.DatabaseName + "</td><td>" + hoursSinceLastBackup + "</td></tr>"
             }
         }
@@ -1818,22 +1818,22 @@
         result = "<div class='container' style='position: absolute; top: 40px; left: 50px; width: 600px;'> <div class='row'>" +
                     "<div class='panel panel-info'>" +
                        "<div class='panel-heading'>" +
-                            "<h7>Basic Server Information</h7>" +
+                            "<h7>Osnovne informacije o serveru</h7>" +
                         "</div>" +
                         "<table class='table table-striped table-hover'>" +
                         "<tbody>";
         result += "<table class='table table-striped'>";
-        result += "<tr><td><b>" + 'Server Name' + "<b/></td><td>" + basicInfo.ServerName + "</td></tr>"
-        result += "<tr><td><b>" + 'Server Version' + "<b/></td><td>" + basicInfo.ServerVersion.substr(0, 63)+ "</td></tr>"
-        result += "<tr><td><b>" + 'Edition' + "<b/></td><td>" + basicInfo.Edition + "</td></tr>"
-        result += "<tr><td><b>" + 'Processor Count' + "<b/></td><td>"  + basicInfo.ProcessorCount + "</td></tr>"
-        result += "<tr><td><b>" + 'Memory' + "<b/></td><td>"  + basicInfo.Memory + "</td></tr>"
-        result += "<tr><td><b>" + 'Worker Count' + "<b/></td><td>"  + basicInfo.WorkerCount + "</td></tr>"
-        result += "<tr><td><b>" + 'Compat Level' + "<b/></td><td>"  + basicInfo.CompatLevel + "</td></tr>"
-        result += "<tr><td><b>" + 'Collation' + "<b/></td><td>"  + basicInfo.Collation + "</td></tr>"
-        result += "<tr><td><b>" + 'HyperThread Ratio' + "<b/></td><td>"  + basicInfo.HyperThreadRatio + "</td></tr>"
-        result += "<tr><td><b>" + 'XTP Enabled' + "<b/></td><td>" + basicInfo.IsXTPEnabled + "</td></tr>"
-        result += "<tr><td><b>" + 'HADR Enabled' + "<b/></td><td>"  + basicInfo.IsHADREnabled + "</td></tr>"
+        result += "<tr><td><b>" + 'Ime Servera' + "<b/></td><td>" + basicInfo.ServerName + "</td></tr>"
+        result += "<tr><td><b>" + 'Verzija' + "<b/></td><td>" + basicInfo.ServerVersion.substr(0, 63)+ "</td></tr>"
+        result += "<tr><td><b>" + 'Edicija' + "<b/></td><td>" + basicInfo.Edition + "</td></tr>"
+        result += "<tr><td><b>" + 'Broj Procesora' + "<b/></td><td>"  + basicInfo.ProcessorCount + "</td></tr>"
+        result += "<tr><td><b>" + 'Memorija' + "<b/></td><td>"  + basicInfo.Memory + "</td></tr>"
+        result += "<tr><td><b>" + 'Broj Radnika' + "<b/></td><td>"  + basicInfo.WorkerCount + "</td></tr>"
+        result += "<tr><td><b>" + 'Nivo Kompatibilnosti' + "<b/></td><td>"  + basicInfo.CompatLevel + "</td></tr>"
+        result += "<tr><td><b>" + 'Kolacija' + "<b/></td><td>"  + basicInfo.Collation + "</td></tr>"
+        result += "<tr><td><b>" + 'Odnos Hiper niti' + "<b/></td><td>"  + basicInfo.HyperThreadRatio + "</td></tr>"
+        result += "<tr><td><b>" + 'XTP uključen' + "<b/></td><td>" + basicInfo.IsXTPEnabled + "</td></tr>"
+        result += "<tr><td><b>" + 'HADR uključen' + "<b/></td><td>"  + basicInfo.IsHADREnabled + "</td></tr>"
         result += "</table>";
         result += "</tbody></table></div></div></div>"
         return result;
@@ -1843,18 +1843,18 @@
         result = "<div class='container' style='position: absolute; top: 520px; left: 50px; width: 700px;'> <div class='row'>" +
             "<div class='panel panel-info'>" +
             "<div class='panel-heading'>" +
-            "<h7>Database List</h7>" +
+            "<h7>Lista Baza</h7>" +
             "</div>" +
             "<table class='table table-striped table-hover'>" +
             "<tbody>" +
                 "<thead>"+
                     "<tr>"+
-		                "<th>Name</th>"+
-		                "<th>State</th>"+
-		                "<th>Recovery Model</th>"+
-		                "<th>Snapshot Isolation</th>"+
-		                "<th>Encryption</th>"+
-		                "<th>Size Megabytes</th>"+
+		                "<th>Ime</th>"+
+		                "<th>Stanje</th>"+
+		                "<th>Model Oporavka</th>"+
+		                "<th>Nivo Izolacije</th>"+
+		                "<th>Enkripcija</th>"+
+		                "<th>Veličina u Megabajtima</th>"+
 		            "</tr>"+
 		        "</thead>";
         for (var i = 0; i < basicInfo.Databases.length; i++) {
@@ -1869,20 +1869,20 @@
         result = "<div class='container' style='position: absolute; top: 900px; left: 50px; width: 800px;'> <div class='row'>" +
             "<div class='panel panel-info'>" +
             "<div class='panel-heading'>" +
-            "<h7>Database List</h7>" +
+            "<h7>Lista Fajlova</h7>" +
             "</div>" +
             "<table class='table table-striped table-hover'>" +
             "<tbody>" +
             "<thead>" +
             "<tr>" +
-            "<th>Name</th>" +
-            "<th>Database</th>" +
-            "<th>Type</th>"+
-            "<th>Size</th>" +
-            "<th>Max Size</th>" +
-            "<th>Growth</th>" +
-            "<th>State</th>" +
-            "<th>Location</th>"
+            "<th>Ime</th>" +
+            "<th>Baza</th>" +
+            "<th>Tip</th>"+
+            "<th>Veličina</th>" +
+            "<th>Maksimalna Veličina</th>" +
+            "<th>Rast</th>" +
+            "<th>Stanje</th>" +
+            "<th>Lokacija</th>"
             "</tr>" +
             "</thead>";
         for (var i = 0; i < basicInfo.DatabaseFiles.length; i++) {
@@ -1897,7 +1897,7 @@
 
 <div class="panel panel-warning" style="position:absolute;top:100px;left:13%;width:400px;">
     <div class="panel-heading">
-        <h7 class="panel-title">Report Information</h7>
+        <h7 class="panel-title">Informacije o izveštaju</h7>
     </div>
     <div class="panel-body">
         <b> Server Name </b> - @Model.Server.ServerName
@@ -1913,17 +1913,17 @@
         <nav class="navbar navbar-expand-lg navbar-light bg-light" sstyle="background-color:#e0e0e0;background:#e0e0e0;">
             <div class="collapse navbar-collapse" id="navcol-1">
                 <ul class="nav navbar-nav flex-grow-1 justify-content-between">
-                    <li class="nav-item" role="presentation"><a class="nav-link" id="basic_info_href" href="#">Basic Information</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" id="basic_resource_usage_href" href="#">Basic Resource Usage</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" id="cpu_stats_href" href="#">CPU Details</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" id="memory_stats_href" href="#">Memory Details</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" id="io_stats_href" href="#">IO Details</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" id="query_stats_href" href="#">Query Stats</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" id="wait_stats_href" href="#">Wait Stats</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" id="blocking_stats_href" href="#">Blocking and Deadlocks</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" id="backup_info_href" href="#">Backups</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" id="tempdb_info_href" href="#">TempDB Performance</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" id="common_problems_href" href="#">Common Problems</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="basic_info_href" href="#">Osnovne informacije</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="basic_resource_usage_href" href="#">Potrošnja osnovnih resursa</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="cpu_stats_href" href="#">CPU </a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="memory_stats_href" href="#">Memorija</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="io_stats_href" href="#">IO </a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="query_stats_href" href="#">Upiti</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="wait_stats_href" href="#">Statistika Čekanja</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="blocking_stats_href" href="#">Blokiranje</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="backup_info_href" href="#">Rezervne Kopije</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="tempdb_info_href" href="#">TempDB Performanse</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="common_problems_href" href="#">Učestali Problemi</a></li>
                 </ul>
             </div>
         </nav>
