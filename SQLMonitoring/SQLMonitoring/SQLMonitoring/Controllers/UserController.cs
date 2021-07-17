@@ -46,7 +46,8 @@ namespace SQLMonitoring.Controllers
             _db.Users.Remove(user);
             _db.SaveChanges();
 
-            var users = _db.Users;
+            var users = _db.Users.ToList<User>();
+            ViewBag.IsAdmin = true;
             return View("../Admin/AdminHomepage", users);
         }
     }
